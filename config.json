@@ -1,0 +1,16 @@
+{
+	"host1.dyn.example.com.": {
+		"aws_region": "us-west-2",
+		"route_53_zone_id": "MY_ZONE_ID",
+		"route_53_record_ttl": 60,
+		"route_53_record_type": "A",
+		"shared_secret": "SHARED_SECRET_1"
+	},
+	"host2.dyn.example.com.": {
+		"aws_region": "us-west-2",
+		"route_53_zone_id": "MY_ZONE_ID",
+		"route_53_record_ttl": 60,
+		"route_53_record_type": "A",
+		"shared_secret": "SHARED_SECRET_2"
+	}
+}
