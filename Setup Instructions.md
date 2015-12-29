@@ -254,7 +254,8 @@ Here we build an IAM role to grant your Lambda function permissions to read from
 
 * Edit the file to customize these three settings at the top of the file with your S3 bucket name, Region, and the name of your config file if changed..
 
-Settings:  
+Settings:   
+
     config\_s3\_region = 'us-west-2'  
     config\_s3\_bucket = 'my\_bucket\_name'  
     config\_s3\_key = 'config.json'  
