@@ -1,33 +1,25 @@
 Dynamic DNS with Lambda and Route 53 Setup Instructions
+===
 
 This guide will walk you through setting up this system in your own AWS account.
-
 It is meant to supplement the [blog post](https://medium.com/aws-activate-startup-blog/building-a-serverless-dynamic-dns-system-with-aws-a32256f0a1d8) which fully describes the project. 
 
 Prerequisites:
-
+===
 * An Amazon Web Services account.  New accounts are eligible for the[ AWS Free Tier](https://aws.amazon.com/free/).
-
 * A domain you own, hosted on Route 53 or another provider.  You can[ register domains](https://aws.amazon.com/about-aws/whats-new/2014/07/31/amazon-route-53-announces-domain-name-registration-geo-routing-and-lower-pricing/) through Route 53 for as little as $10/year.
 
 Note that I use ‘example.com’ as the domain in these instructions.  Please replace it with your own domain when you set up your system.
-
 Do not copy and paste from this document as the code may contain hidden characters.  Instead, use the text files included in the git repository.
 
 Creating the DNS zone in Route 53
-
+===
 In this section, you create a DNS zone for the delegated subdomain we will use for our dynamic dns entries.  So if your domain is example.com, we will create dyn.example.com.
-
 * Log in to the AWS console.
-
 * Go to Route 53 in the console.
-
 * Click ‘Create Hosted Zone’
-
 * Type ‘dyn.example.com’ in ‘Domain Name’.
-
 * Choose ’Public Hosted Zone’ for ‘Type’.
-
 * Click ‘Create’.
 
 * * *
@@ -38,13 +30,12 @@ In this section, you create a DNS zone for the delegated subdomain we will use f
 * * *
 
 
-* Click on the ‘NS’ record set and copy all the text from the ‘Value’ field in the right pane.These are the values from our example, yours will be different.	ns-47.awsdns.com.
-
-		ns-810.awsdns-37.net.
-
-		ns-1522.awsdns-62.org.
-
-		ns-1730.awsdns-24.co.uk.
+* Click on the ‘NS’ record set and copy all the text from the ‘Value’ field in the right pane.
+These are the values from our example, yours will be different.
+	ns-47.awsdns.com.
+	ns-810.awsdns-37.net.
+	ns-1522.awsdns-62.org.
+	ns-1730.awsdns-24.co.uk.
 
 * * *
 
@@ -65,8 +56,8 @@ In this section, you create a DNS zone for the delegated subdomain we will use f
 
 
 * Click on ‘Hosted zones’ in the left pane.
-
-* Copy the ‘Hosted zone ID’ of dyn.example.com, you will need it later.In our example, it’s ‘ZU040511OI4C4’
+* Copy the ‘Hosted zone ID’ of dyn.example.com, you will need it later.
+In our example, it’s ‘ZU040511OI4C4’
 
 * * *
 
@@ -77,33 +68,24 @@ In this section, you create a DNS zone for the delegated subdomain we will use f
 
 
 Delegating the subdomain.
-
+===
 If your main ‘example.com’ zone is hosted in Route 53, skip to ‘Delegating the subdomain in Route 53’.
 
 Delegating the subdomain on other DNS providers.
-
+===
 If your domain is hosted elsewhere, consult your DNS provider’s documents on delegating subdomains.  Generally, you just need to create a DNS record set under the main domain where the name is ‘dyn’ the type is ‘NS’ and the value is the list of nameservers you pulled from the previous steps.
-
 In standard Bind zonefile format this would look like:	
-
 	dyn.example.com.	IN	NS	ns-47.awsdns.com.
-
 	dyn.example.com.	IN	NS	ns-810.awsdns-37.net.
-
 	dyn.example.com.	IN	NS	ns-1522.awsdns-62.org.
-
 	dyn.example.com.	IN	NS	ns-1730.awsdns-24.co.uk.
 
 Delegating the subdomain in Route 53.
-
+===
 * Click ‘Back to Hosted Zones’
-
 * Select the main ‘example.com’ zone, then click ‘Go to Record Sets’
-
 * Click ‘Create Record Set’
-
 * Populate all the fields as illustrated in the right pane below, substituting the values you copied from your new dyn.example.com domain in the ‘Value’ field.
-
 * Click ‘Create’
 
 * * *
@@ -178,7 +160,12 @@ Be sure to use a comma between blocks, but not after the final block.  It’s al
 
 * Replace ‘SHARED_SECRET’ with your own unique, strong passwords.
 
-* Choose one of the four Regions that currently support Lambda and replace ‘us-west-2’ with your selection.Here are your choices as of December 2015.  You can consult [this document](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) to see if Lambda has launched in other Regions.US East N. Virginia  		us-east-1US West Oregon 		us-west-2EU Ireland			eu-west-1Asia Pacific Tokyo		ap-northeast-1 
+* Choose one of the four Regions that currently support Lambda and replace ‘us-west-2’ with your selection.
+Here are your choices as of December 2015.  You can consult [this document](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) to see if Lambda has launched in other Regions.
+US East N. Virginia  		us-east-1
+US West Oregon 		us-west-2
+EU Ireland			eu-west-1
+Asia Pacific Tokyo		ap-northeast-1 
 
  
 
@@ -258,7 +245,10 @@ Building the Lambda function.
 
 * Save a copy of ‘dynamic_dns_lambda.py’ to your local drive.
 
-* Edit the file to customize these three settings at the top of the file with your S3 bucket name, Region, and the name of your config file if changed..config_s3_region = 'us-west-2'config_s3_bucket = 'my_bucket_name'config_s3_key = 'config.json'
+* Edit the file to customize these three settings at the top of the file with your S3 bucket name, Region, and the name of your config file if changed..
+config_s3_region = 'us-west-2'
+config_s3_bucket = 'my_bucket_name'
+config_s3_key = 'config.json'
 
 * Navigate to Lambda in the AWS Console and click ‘Get Started’ if the new account page is displayed.
 
@@ -382,9 +372,19 @@ Running the Dynamic DNS Client.
 
 * Save a copy of dynamic_dns_lambda_client.sh onto the filesystem of an OSX, Linux or Unix computer.
 
-* From the command line, add execution permissions:chmod a+x ./dynamic_dns_lambda_client.sh
+* From the command line, add execution permissions:
+chmod a+x ./dynamic_dns_lambda_client.sh
 
-* Call the client by passing in your hostname, shared secret and API url.Below are examples of successful executions../dynamic_dns_lambda_client.sh host1.dyn.example.com. SHARED_SECRET_1 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"{"return_message": "Your hostname record host1.dyn.example.com. has been set to 176.32.100.36", "return_status": "success"}./dynamic_dns_lambda_client.sh host1.dyn.example.com. SHARED_SECRET_2 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"{"return_message": "Your IP address matches the current Route53 DNS record.", "return_status": "success"}
+* Call the client by passing in your hostname, shared secret and API url.
+Below are examples of successful executions.
+
+./dynamic_dns_lambda_client.sh host1.dyn.example.com. SHARED_SECRET_1 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"
+
+{"return_message": "Your hostname record host1.dyn.example.com. has been set to 176.32.100.36", "return_status": "success"}
+
+./dynamic_dns_lambda_client.sh host1.dyn.example.com. SHARED_SECRET_2 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"
+
+{"return_message": "Your IP address matches the current Route53 DNS record.", "return_status": "success"}
 
 Done!
 
