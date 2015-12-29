@@ -105,7 +105,7 @@ In standard Bind zonefile format this would look like:
 * * *
 
 
-Testing the DNS setup.
+###Testing the DNS setup.
 
 If everything is setup properly, test.dyn.example.com should resolve to 1.2.3.4.
 
@@ -123,37 +123,36 @@ Our system uses a json config file in AWS S3  to store user and hostname informa
 
 Our sample config:
 
-{
-
-	"host1.dyn.example.com.": {
-
-		"aws_region": "us-west-2",
-
-		"route_53_zone_id": "MY_ZONE_ID",
-
-		"route_53_record_ttl": 60,
-
-		"route_53_record_type": "A",
-
-		"shared_secret": "SHARED_SECRET_1"
-
-	},
-
-	"host2.dyn.example.com.": {
-
-		"aws_region": "us-west-2",
-
-		"route_53_zone_id": "MY_ZONE_ID",
-
-		"route_53_record_ttl": 60,
-
-		"route_53_record_type": "A",
-
-		"shared_secret": "SHARED_SECRET_2"
-
-	}
-
-}
+    {
+    	"host1.dyn.example.com.": {
+    
+    		"aws_region": "us-west-2",
+    
+    		"route_53_zone_id": "MY_ZONE_ID",
+    
+    		"route_53_record_ttl": 60,
+    
+    		"route_53_record_type": "A",
+    
+    		"shared_secret": "SHARED_SECRET_1"
+    
+    	},
+    
+    	"host2.dyn.example.com.": {
+    
+    		"aws_region": "us-west-2",
+    
+    		"route_53_zone_id": "MY_ZONE_ID",
+    
+    		"route_53_record_ttl": 60,
+    
+    		"route_53_record_type": "A",
+    
+    		"shared_secret": "SHARED_SECRET_2"
+    
+    	}
+    
+    }
 
 The sample provided allows two hostnames in the system host1.dyn.example.com. & host2.dyn.example.com.  You can add as many hostnames as you want by copying and pasting config blocks.
 
@@ -170,11 +169,10 @@ Be sure to use a comma between blocks, but not after the final block.  It’s al
 * Choose one of the four Regions that currently support Lambda and replace ‘us-west-2’ with your selection.
 
 Here are your choices as of December 2015.  You can consult [this document](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) to see if Lambda has launched in other Regions.  
-
-    US East N. Virginia  		us-east-1
-    US West Oregon 		us-west-2
-    EU Ireland			eu-west-1
-    Asia Pacific Tokyo		ap-northeast-1 
+US East N. Virginia  		us-east-1  
+US West Oregon 		us-west-2  
+EU Ireland			eu-west-1  
+Asia Pacific Tokyo		ap-northeast-1   
 
  
 
@@ -258,7 +256,7 @@ Here we build an IAM role to grant your Lambda function permissions to read from
 
 Settings:  
     config\_s3\_region = 'us-west-2'  
-    config\_s3\_bucket = 'my_bucket_name'  
+    config\_s3\_bucket = 'my\_bucket\_name'  
     config\_s3\_key = 'config.json'  
 
 * Navigate to Lambda in the AWS Console and click ‘Get Started’ if the new account page is displayed.
@@ -390,13 +388,13 @@ chmod a+x ./dynamic\_dns\_lambda_client.sh
  
 Below are examples of successful executions.
 
-    ./dynamic\_dns\_lambda\_client.sh host1.dyn.example.com. SHARED\_SECRET_1 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"  
+    ./dynamic_dns_lambda_client.sh host1.dyn.example.com. SHARED_SECRET_1 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"  
 
-    {"return_message": "Your hostname record host1.dyn.example.com. has been set to 176.32.100.36", "return\_status": "success"}  
+    {"return_message": "Your hostname record host1.dyn.example.com. has been set to 176.32.100.36", "return_status": "success"}  
 
-    ./dynamic\_dns\_lambda\_client.sh host1.dyn.example.com. SHARED\_SECRET\_2 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"  
+    ./dynamic_dns_lambda_client.sh host1.dyn.example.com. SHARED_SECRET_2 "12345aaaa.execute-api.us-west-2.amazonaws.com/prod"  
 
-    {"return_message": "Your IP address matches the current Route53 DNS record.", "return\_status": "success"}  
+    {"return_message": "Your IP address matches the current Route53 DNS record.", "return_status": "success"}  
 
 ##Done!
 
