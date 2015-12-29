@@ -256,9 +256,9 @@ Here we build an IAM role to grant your Lambda function permissions to read from
 
 Settings:   
 
-    config\_s3\_region = 'us-west-2'  
-    config\_s3\_bucket = 'my\_bucket\_name'  
-    config\_s3\_key = 'config.json'  
+    config_s3_region = 'us-west-2'  
+    config_s3_bucket = 'my_bucket_name'  
+    config_s3_key = 'config.json'  
 
 * Navigate to Lambda in the AWS Console and click ‘Get Started’ if the new account page is displayed.
 
