@@ -6,11 +6,12 @@ It is meant to supplement the [blog post](https://medium.com/aws-activate-startu
 ###Prerequisites:
 
 * An Amazon Web Services account.  New accounts are eligible for the[ AWS Free Tier](https://aws.amazon.com/free/).
-* A domain you own, hosted on Route 53 or another provider.  You can[ register domains](https://aws.amazon.com/about-aws/whats-new/2014/07/31/amazon-route-53-announces-domain-name-registration-geo-routing-and-lower-pricing/) through Route 53 for as little as $10/year.  
+* A domain you own, ie 'example.com', hosted on Route 53 or another provider.  You can[ register domains](https://aws.amazon.com/about-aws/whats-new/2014/07/31/amazon-route-53-announces-domain-name-registration-geo-routing-and-lower-pricing/) through Route 53 for as little as $10/year.  
 
-
-Note that I use ‘example.com’ as the domain in these instructions.  Please replace it with your own domain when you set up your system.
-Do not copy and paste from this document as the code may contain hidden characters.  Instead, use the text files included in the git repository.  
+###Notes:
+* We use ‘example.com’ as the domain in these instructions.  Please replace it with your own domain when you set up your system.  
+As noted above, we assume that you already own a domain, and the instructions focus on setting up a delegated subdomain, ie dyn.example.com.  
+* Do not copy and paste from this document as the code may contain hidden characters.  Instead, use the text files included in the git repository.  
 
 
 ###Creating the DNS zone in Route 53
