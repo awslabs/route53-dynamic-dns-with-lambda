@@ -336,19 +336,15 @@ Settings:
 * * *
 
 
-* Click on ‘Mapping Templates’ then ‘Add Mapping Template’
+* Click on ‘Body Mapping Templates’ then ‘Add mapping template’
 
 * Type ‘application/json’ in the ‘Content-Type’ field.
 
 * Click the check mark next to ‘application/json’
 
-* Click the pencil next to ‘Input Passthrough’
-
-* Select ‘Mapping Template’ from the pulldown.
-
 * Paste the contents of the ‘api\_mapping\_template’ file into the text field.
 
-* Click the check mark next to the ‘Mapping Template’ pulldown.
+* Click on 'Save'
 
 * * *
 
