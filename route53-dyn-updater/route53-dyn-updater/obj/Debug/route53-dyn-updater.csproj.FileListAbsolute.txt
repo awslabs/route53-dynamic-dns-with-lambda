@@ -1,1 +1,0 @@
-C:\Users\danie\Documents\GitHubVisualStudio\route53-dynamic-dns-with-lambda\route53-dyn-updater\route53-dyn-updater\bin\Debug\route53-dyn-updater.exe.config
