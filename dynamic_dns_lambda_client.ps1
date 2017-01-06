@@ -1,7 +1,8 @@
 #PowerShell: 
 # to enable scripts to run, you need to change execution policy to allow 3rd party scripts to run.
 # https://technet.microsoft.com/en-us/library/hh849812.aspx
-# Set-ExecutionPolicy unrestricted
+# To launch a subshell to run the script, use:
+# powershell –ExecutionPolicy Bypass
 #
 
 Param(
