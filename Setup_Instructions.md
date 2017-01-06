@@ -376,6 +376,40 @@ Settings:
 * * *
 
 
+
+###Quick setup using Terraform
+
+The `terraform` directory contains the configuration files for quick setup using [Terraform](https://www.terraform.io/). The terraform based setup is currently in beta stage, and has not been properly tested.
+
+* Install [Terraform](https://www.terraform.io/intro/getting-started/install.html) by following the instructions on [terraform.io]. After installation, open the `terraform` directory in `cmd`/`powershell`/`Terminal`. 
+
+    cd terraform
+
+Open the file `dynamic_dns_lambda.py` and update it with your AWS region and S3 bucket name. 
+
+Terraform requires the source files to be zipped, before it can be uploaded to AWS Lambda. Zip the modified `dynamic_dns_lambda.py` and place it in the `terraform` directory. If you are using a unix based system, you can zip the file using following command
+
+    zip -r dynamic_dns_lambda.zip ../dynamic_dns_lambda.py
+
+Copy the sample configuration files `config.json.sample` and `terraform.tfvars.sample` to `config.json` and `terraform.tfvars` respectively. 
+	
+    cp config.json.sample config.json
+    cp terraform.tfvars.sample terraform.tfvars
+
+Open the files in your text editor and update the configuration details.
+
+If you are using a delegated subdomain (eg: dyn.example.com) instead of the root domain (eg: example.com), please follow the instructions under **Delegating the subdomain** above.
+
+To setup the Dynamic DNS system execute
+    
+    terraform apply
+	
+To remove the services and undo the changes
+    
+    terraform destroy
+
+
+
 ###Running the Dynamic DNS Client.
 
 * Save a copy of dynamic\_dns\_lambda\_client.sh onto the filesystem of an OSX, Linux or Unix computer.

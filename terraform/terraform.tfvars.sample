@@ -1,0 +1,6 @@
+route53_zone_name = "dyn.example.com"
+s3_bucket_name = "yourinitials-dynamic-dns"
+aws_region = "us-west-2"
+aws_profile = "default"
+aws_access_key = ""
+aws_secret_key = ""
