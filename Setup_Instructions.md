@@ -1,20 +1,20 @@
-##Dynamic DNS with Lambda and Route 53 Setup Instructions
+## Dynamic DNS with Lambda and Route 53 Setup Instructions
 
 This guide will walk you through setting up this system in your own AWS account.
 It is meant to supplement the [blog post](https://medium.com/aws-activate-startup-blog/building-a-serverless-dynamic-dns-system-with-aws-a32256f0a1d8) which fully describes the project. 
 
-###Prerequisites:
+### Prerequisites:
 
 * An Amazon Web Services account.  New accounts are eligible for the[ AWS Free Tier](https://aws.amazon.com/free/).
 * A domain you own, hosted on Route 53 or another provider.  You can[ register domains](https://aws.amazon.com/about-aws/whats-new/2014/07/31/amazon-route-53-announces-domain-name-registration-geo-routing-and-lower-pricing/) through Route 53 for as little as $10/year.  
 
-###Notes:
+### Notes:
 * We use ‘example.com’ as the domain in these instructions.  Please replace it with your own domain when you set up your system.  
 As noted above, we assume that you already own the primary domain, ie example.com, and the instructions focus on setting up a delegated subdomain, ie dyn.example.com.  
 * Do not copy and paste from this document as the code may contain hidden characters.  Instead, use the text files included in the git repository.  
 
 
-###Creating the DNS zone in Route 53
+### Creating the DNS zone in Route 53
 
 In this section, you create a DNS zone for the delegated subdomain we will use for our dynamic dns entries.  So if your domain is example.com, we will create dyn.example.com.  
 The images in this section show an example.com zone.  Your main domain zone will only show here if it is hosted in Route 53.
@@ -214,7 +214,7 @@ Asia Pacific Tokyo		ap-northeast-1
 
 * When finished, you should see your file listed in the left pane.
 
-###Creating an IAM Role for Lambda
+### Creating an IAM Role for Lambda
 
 Here we build an IAM role to grant your Lambda function permissions to read from S3 and read and write to your Route 53 zone.
 
@@ -250,7 +250,7 @@ Here we build an IAM role to grant your Lambda function permissions to read from
 
 * Click ‘Create Role’
 
-###Building the Lambda function.
+### Building the Lambda function.
 
 * Save a copy of ‘dynamic\_dns\_lambda.py’ to your local drive.
 
@@ -290,7 +290,7 @@ Settings:
 
 * If you click the ‘Test’ button, the function will fail.  That’s OK.
 
-###Building the API Gateway.
+### Building the API Gateway.
 
 * Navigate to ‘API Gateway’ in the AWS console and click ‘Get Started’ if the new account page is displayed.
 
@@ -376,7 +376,7 @@ Settings:
 * * *
 
 
-###Running the Dynamic DNS Client.
+### Running the Dynamic DNS Client.
 
 * Save a copy of dynamic\_dns\_lambda\_client.sh onto the filesystem of an OSX, Linux or Unix computer.
 
@@ -395,5 +395,5 @@ Below are examples of successful executions.
 
     {"return_message": "Your IP address matches the current Route53 DNS record.", "return_status": "success"}  
 
-##Done!
+## Done!
 
