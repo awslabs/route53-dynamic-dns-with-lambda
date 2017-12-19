@@ -1,6 +1,7 @@
 {
     "execution_mode" : "$input.params('mode')",
     "source_ip" : "$context.identity.sourceIp",
+    "local_ip" : "$input.params('localIp')",
     "query_string" : "$input.params().querystring",
     "set_hostname" : "$input.params('hostname')",
     "validation_hash" : "$input.params('hash')"
