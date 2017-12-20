@@ -1,9 +1,9 @@
 #!/bin/bash
-# call script as:
-# ./dynamic_dns_lambda_client.sh host1.dyn.example.com. SHARED_SECRET_1 "abc123.execute-api.us-west-2.amazonaws.com/prod"
+
+CACHEFILE="/tmp/dynamic_dns_lambda_client.tmp"
 
 fail () {
-    echo "FAIL: $1"
+    echo "$(basename $0): $1"
     exit 1
 }
 
@@ -29,9 +29,17 @@ Options:
         The URL where to send the requests.
         Required argument.
 
-    --interface INTERFACE
-        By default the tool updates the hostname with the public IP. This arguments forces
-        the update to use the IP of a specific interface.
+    --ip-source public | IP | INTERFACE
+        This arguments defines how to get the IP we update to.
+        public    - use the public IP of the device
+        IP        - use a specific IP passed as argument
+        INTERFACE - use the IP of an interface passed as argument
+
+    --cache
+        Store a cache file in $CACHEFILE.
+        Whenever invoked, if the IP we want to update to is already cached, save some
+        requests and stop.
+
 EOF
 }
 
@@ -58,20 +66,21 @@ while [[ $# -ge 1 ]]; do
             shift
             ;;
         --url)
-            # Argument needs to be non-empty and absolute path
             if [ -z "$2" ] ; then
                 fail "\"$1\" argument needs a value."
             fi
             myAPIURL=$2
             shift
             ;;
-        --interface)
-            # Argument needs to be non-empty and absolute path
+        --ip-source)
             if [ -z "$2" ] ; then
                 fail "\"$1\" argument needs a value."
             fi
-            interface=$2
+            sourceIP=$2
             shift
+            ;;
+        --cache)
+            cache=true
             ;;
         *)
             fail "Unrecognized option $1."
@@ -83,36 +92,52 @@ done
 
 # If the script is called with no arguments, show an instructional error message.
 if [ -z "$myHostname" ] || [ -z "$mySharedSecret" ] || [ -z "$myAPIURL" ]; then
-    echo 'The script requires hostname and shared secret arguments.'
-    echo "ie  $0 host1.dyn.example.com. sharedsecret \"abc123.execute-api.us-west-2.amazonaws.com/prod\""
-    exit
+    echo "$(basename $0): Required arguments missing."
+    help
+    exit 1
 fi
 
-if [ -z "$interface" ]; then
+if [ "$sourceIP" = "public" ]; then
     # Call the API in get mode to get the IP address
     myIP=$(curl -q -s  "https://$myAPIURL?mode=get" | jq -r '.return_message //empty')
     [ -z "$myIP" ] && fail "Couldn't find your public IP"
+elif [[ $sourceIP =~ ^[0-9a-z]+$ ]]; then
+    # IP - interface
+    myIP="$(ip addr list "$sourceIP" |grep "inet " |cut -d' ' -f6|cut -d/ -f1)"
+    [ -z "$myIP" ] && fail "Couldn't get the IP of $sourceIP."
+elif [[ "$sourceIP" =~ ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$ ]]; then
+    myIP="$sourceIP"
 else
-    # Use the ip address of a specific interface
-    myIP="$(ip addr list "$interface" |grep "inet " |cut -d' ' -f6|cut -d/ -f1)"
-    [ -z "$myIP" ] && fail "Couldn't get the IP of $interface."
+    fail "Invalid --ip-source argument. Check help."
 fi
 
-echo "Updating $myHostname to IP $myIP."
+if [ "$cache" = "true" ] && [ -f "$CACHEFILE" ]; then
+    cached_myHostname=$(cat $CACHEFILE | cut -d'>' -f1)
+    cached_myIP=$(cat $CACHEFILE | cut -d'>' -f2)
+    if [ "$cached_myIP" = "$myIP" ] && [ "$cached_myHostname" = "$myHostname" ]; then
+        echo "$(basename $0): Found a cached update."
+        exit 0
+    fi
+fi
+
+echo "$(basename $0): Updating $myHostname to IP $myIP."
 
 # Build the hashed token
 myHash=$(echo -n "$myIP$myHostname$mySharedSecret" | shasum -a 256 | awk '{print $1}')
 
 # Call the API in set mode to update Route 53
-if [ -z $interface ]; then
+if [ "$sourceIP" = "public" ]; then
     reply=$(curl -q -s "https://$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash")
 else
     reply=$(curl -q -s "https://$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash&localIp=$myIP")
 fi
 
 if [ "$(echo "$reply" | jq -r '.return_status //empty')" == "success" ]; then
-    echo -n "Request succeeded: "
+    if [ "$cache" = "true" ]; then
+        echo "$myHostname>$myIP" > $CACHEFILE
+    fi
+    echo -n "$(basename $0): Request succeeded: "
 else
-    echo -n "Request failed: "
+    echo -n "$(basename $0): Request failed: "
 fi
 echo "$(echo "$reply" | jq -r '.return_message //empty')"
