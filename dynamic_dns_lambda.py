@@ -204,7 +204,7 @@ def run_set_mode(set_hostname, validation_hash, source_ip):
                 source_ip)
             return_status = 'success'
             return_message = 'Your hostname record ' + set_hostname +\
-                ' has been set to ' + source_ip
+                ' has been set to ' + source_ip + "."
             return {'return_status': return_status,
                     'return_message': return_message}
 
