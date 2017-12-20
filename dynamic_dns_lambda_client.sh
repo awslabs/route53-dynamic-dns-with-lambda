@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CACHEFILE="/tmp/dynamic_dns_lambda_client.tmp"
+CACHEFILE_EXT="ddns.tmp"
 
 fail () {
     echo "$(basename $0): $1"
@@ -31,7 +31,7 @@ Options:
 
     --ip-source public | IP | INTERFACE
         This arguments defines how to get the IP we update to.
-        public    - use the public IP of the device
+        public    - use the public IP of the device (default)
         IP        - use a specific IP passed as argument
         INTERFACE - use the IP of an interface passed as argument
 
@@ -97,7 +97,10 @@ if [ -z "$myHostname" ] || [ -z "$mySharedSecret" ] || [ -z "$myAPIURL" ]; then
     exit 1
 fi
 
-if [ "$sourceIP" = "public" ]; then
+CACHEFILE="/tmp/$myHostname$CACHEFILE_EXT"
+echo $CACHEFILE
+
+if [ "$sourceIP" = "public" ] || [ -z "$sourceIP" ]; then
     # Call the API in get mode to get the IP address
     myIP=$(curl -q -s  "https://$myAPIURL?mode=get" | jq -r '.return_message //empty')
     [ -z "$myIP" ] && fail "Couldn't find your public IP"
@@ -112,9 +115,8 @@ else
 fi
 
 if [ "$cache" = "true" ] && [ -f "$CACHEFILE" ]; then
-    cached_myHostname=$(cat $CACHEFILE | cut -d'>' -f1)
-    cached_myIP=$(cat $CACHEFILE | cut -d'>' -f2)
-    if [ "$cached_myIP" = "$myIP" ] && [ "$cached_myHostname" = "$myHostname" ]; then
+    cached_myIP=$(cat $CACHEFILE)
+    if [ "$cached_myIP" = "$myIP" ]; then
         echo "$(basename $0): Found a cached update."
         exit 0
     fi
@@ -134,7 +136,7 @@ fi
 
 if [ "$(echo "$reply" | jq -r '.return_status //empty')" == "success" ]; then
     if [ "$cache" = "true" ]; then
-        echo "$myHostname>$myIP" > $CACHEFILE
+        echo "$myIP" > $CACHEFILE
     fi
     echo -n "$(basename $0): Request succeeded: "
 else
