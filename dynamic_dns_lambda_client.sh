@@ -138,8 +138,8 @@ if [ "$(echo "$reply" | jq -r '.return_status //empty')" == "success" ]; then
     if [ "$cache" = "true" ]; then
         echo "$myIP" > $CACHEFILE
     fi
-    echo -n "$(basename $0): Request succeeded: "
+    echo "$(basename $0): Request succeeded: $(echo "$reply" | jq -r '.return_message //empty')"
 else
-    echo -n "$(basename $0): Request failed: "
+    echo "$(basename $0): Request failed: $(echo "$reply" | jq -r '.return_message //empty')"
+    exit 1
 fi
-echo "$(echo "$reply" | jq -r '.return_message //empty')"
