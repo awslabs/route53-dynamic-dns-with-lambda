@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CACHEFILE_EXT="ddns.tmp"
+CACHEFILE_DIR="./" #must end in /
 
 fail () {
     echo "$(basename $0): $1"
@@ -17,7 +18,7 @@ Options:
         Display this help and exit.
 
     --hostname HOSTNAME
-        Hostname to update. Example: "host1.dyn.example.com.".
+        Hostname to update. Example: "host1.dyn.example.com."
         Mind the trailing dot.
         Required argument.
 
@@ -25,11 +26,12 @@ Options:
         Secret to use when validating the request for the hostname.
         Required argument.
 
-    --URL API_URL
+    --url API_URL
         The URL where to send the requests.
         Required argument.
 
     --ip-source public | IP | INTERFACE
+    	Currently not implemented
         This arguments defines how to get the IP we update to.
         public    - use the public IP of the device (default)
         IP        - use a specific IP passed as argument
@@ -51,7 +53,7 @@ while [[ $# -ge 1 ]]; do
             help
             exit 0
             ;;
-        --host)
+        --hostname)
             if [ -z "$2" ]; then
                 fail "\"$1\" argument needs a value."
             fi
@@ -69,10 +71,15 @@ while [[ $# -ge 1 ]]; do
             if [ -z "$2" ] ; then
                 fail "\"$1\" argument needs a value."
             fi
-            myAPIURL=$2
+            if [[ "$2" == "https://"* ]]; then
+            	myAPIURL=$2
+            else
+            	myAPIURL="https://"$2
+            fi
             shift
             ;;
         --ip-source)
+        	fail "\"$1\" Currently not implemented."
             if [ -z "$2" ] ; then
                 fail "\"$1\" argument needs a value."
             fi
@@ -97,16 +104,16 @@ if [ -z "$myHostname" ] || [ -z "$mySharedSecret" ] || [ -z "$myAPIURL" ]; then
     exit 1
 fi
 
-CACHEFILE="/tmp/$myHostname$CACHEFILE_EXT"
-echo $CACHEFILE
+CACHEFILE="$CACHEFILE_DIR$myHostname$CACHEFILE_EXT"
 
 if [ "$sourceIP" = "public" ] || [ -z "$sourceIP" ]; then
     # Call the API in get mode to get the IP address
-    myIP=$(curl -q -s  "https://$myAPIURL?mode=get" | jq -r '.return_message //empty')
+    myIP=$(curl -q -s  "$myAPIURL?mode=get" | jq -r '.return_message //empty')
     [ -z "$myIP" ] && fail "Couldn't find your public IP"
 elif [[ $sourceIP =~ ^[0-9a-z]+$ ]]; then
     # IP - interface
-    myIP="$(ip addr list "$sourceIP" |grep "inet " |cut -d' ' -f6|cut -d/ -f1)"
+    #myIP="$(ip addr list "$sourceIP" |grep "inet " |cut -d' ' -f6|cut -d/ -f1)"
+    myIP="$(ifconfig "$sourceIP" |grep "inet " |cut -d' ' -f6|cut -d/ -f1)"
     [ -z "$myIP" ] && fail "Couldn't get the IP of $sourceIP."
 elif [[ "$sourceIP" =~ ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$ ]]; then
     myIP="$sourceIP"
@@ -125,13 +132,19 @@ fi
 echo "$(basename $0): Updating $myHostname to IP $myIP."
 
 # Build the hashed token
-myHash=$(echo -n "$myIP$myHostname$mySharedSecret" | shasum -a 256 | awk '{print $1}')
+if command -v shasum > /dev/null 2>&1 ; then
+	myHash=$(echo -n "$myIP$myHostname$mySharedSecret" | shasum -a 256 | awk '{print $1}')
+elif command -v sha256sum  > /dev/null 2>&1 ; then
+	myHash=$(echo -n "$myIP$myHostname$mySharedSecret" | sha256sum | awk '{print $1}')
+else
+	fail "Neither shasum nor sha256sum found on host"
+fi
 
 # Call the API in set mode to update Route 53
 if [ "$sourceIP" = "public" ]; then
-    reply=$(curl -q -s "https://$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash")
+    reply=$(curl -q -s "$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash")
 else
-    reply=$(curl -q -s "https://$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash&localIp=$myIP")
+    reply=$(curl -q -s "$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash&localIp=$myIP")
 fi
 
 if [ "$(echo "$reply" | jq -r '.return_status //empty')" == "success" ]; then
