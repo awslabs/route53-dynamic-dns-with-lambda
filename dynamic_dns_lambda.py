@@ -204,7 +204,7 @@ def run_set_mode(set_hostname, validation_hash, source_ip):
                 source_ip)
             return_status = 'success'
             return_message = 'Your hostname record ' + set_hostname +\
-                ' has been set to ' + source_ip
+                ' has been set to ' + source_ip + "."
             return {'return_status': return_status,
                     'return_message': return_message}
 
@@ -222,6 +222,7 @@ def lambda_handler(event, context):
     query_string = event['query_string']
     validation_hash = event['validation_hash']
     set_hostname = event['set_hostname']
+    local_ip = event['local_ip']
 
     # Verify that the execution mode was set correctly.
     execution_modes = ('set', 'get')
@@ -240,7 +241,7 @@ def lambda_handler(event, context):
 
     # Proceed with set mode to create or update the DNS record.
     else:
-        return_dict = run_set_mode(set_hostname, validation_hash, source_ip)
+        return_dict = run_set_mode(set_hostname, validation_hash, local_ip if local_ip else source_ip)
 
     # This Lambda function always exits as a success
     # and passes success or failure information in the json message.
