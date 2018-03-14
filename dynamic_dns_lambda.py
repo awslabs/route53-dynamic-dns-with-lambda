@@ -1,5 +1,13 @@
 # Dynamic DNS via AWS API Gateway, Lambda & Route 53
 # Script variables use lower_case_
+
+## This version implements setting internal IP
+## Note that this weakens the security of the system since the client specifies
+## the IP to set, where before the IP was set to the source IP of the client request.
+## To disable internal IP find the block of text:
+##	'# Comment out the following 4 lines to disable internal IP'
+## and do that ;)
+
 from __future__ import print_function
 
 import json
@@ -119,7 +127,7 @@ def route53_client(execution_mode, aws_region, route_53_zone_id,
     '''
 
 
-def run_set_mode(set_hostname, validation_hash, source_ip):
+def run_set_mode(set_hostname, validation_hash, source_ip, internal_ip):
     # Try to read the config, and error if you can't.
     try:
         full_config = read_s3_config()
@@ -129,6 +137,12 @@ def run_set_mode(set_hostname, validation_hash, source_ip):
             'or reading the S3 config file.'
         return {'return_status': return_status,
                 'return_message': return_message}
+    # Check if internal_ip was set
+	# Comment out the following 4 lines to disable internal IP
+    if internal_ip == "":
+        set_ip = source_ip
+    else:
+        set_ip = internal_ip
     # Get the section of the config related to the requested hostname.
     record_config_set = full_config[set_hostname]
     aws_region = record_config_set['aws_region']
@@ -185,7 +199,7 @@ def run_set_mode(set_hostname, validation_hash, source_ip):
             route53_ip = route53_get_response['return_message']
         # If the client's current IP matches the current DNS record
         # in Route 53 there is nothing left to do.
-        if route53_ip == source_ip:
+        if route53_ip == set_ip:
             return_status = 'success'
             return_message = 'Your IP address matches '\
                 'the current Route53 DNS record.'
@@ -201,10 +215,10 @@ def run_set_mode(set_hostname, validation_hash, source_ip):
                 set_hostname,
                 route_53_record_ttl,
                 route_53_record_type,
-                source_ip)
+                set_ip)
             return_status = 'success'
             return_message = 'Your hostname record ' + set_hostname +\
-                ' has been set to ' + source_ip + "."
+                ' has been set to ' + set_ip + "."
             return {'return_status': return_status,
                     'return_message': return_message}
 
@@ -220,9 +234,9 @@ def lambda_handler(event, context):
     execution_mode = event['execution_mode']
     source_ip = event['source_ip']
     query_string = event['query_string']
+    internal_ip = event['internal_ip']
     validation_hash = event['validation_hash']
     set_hostname = event['set_hostname']
-    local_ip = event['local_ip']
 
     # Verify that the execution mode was set correctly.
     execution_modes = ('set', 'get')
@@ -241,7 +255,7 @@ def lambda_handler(event, context):
 
     # Proceed with set mode to create or update the DNS record.
     else:
-        return_dict = run_set_mode(set_hostname, validation_hash, local_ip if local_ip else source_ip)
+        return_dict = run_set_mode(set_hostname, validation_hash, source_ip, internal_ip)
 
     # This Lambda function always exits as a success
     # and passes success or failure information in the json message.
