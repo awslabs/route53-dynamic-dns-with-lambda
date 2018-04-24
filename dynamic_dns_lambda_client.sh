@@ -1,4 +1,5 @@
 #!/bin/bash
+# ipv6
 
 ## Implements setting internal IP with --ip-source
 ## and --cache
