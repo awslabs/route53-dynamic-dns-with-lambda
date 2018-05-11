@@ -76,12 +76,12 @@ In our example, it’s ‘ZU040511OI4C4’
 * * *
 
 
-###Delegating the subdomain.
+### Delegating the subdomain.
 
 If your main ‘example.com’ zone is hosted in Route 53, skip to ‘Delegating the subdomain in Route 53’.
 
 
-###Delegating the subdomain on other DNS providers.
+### Delegating the subdomain on other DNS providers.
 
 If your domain is hosted elsewhere, consult your DNS provider’s documents on delegating subdomains.  Generally, you just need to create a DNS record set under the main domain where the name is ‘dyn’ the type is ‘NS’ and the value is the list of nameservers you pulled from the previous steps.
 In standard Bind zonefile format this would look like:	
@@ -91,7 +91,7 @@ In standard Bind zonefile format this would look like:
     dyn.example.com.	IN	NS	ns-1522.awsdns-62.org.
     dyn.example.com.	IN	NS	ns-1730.awsdns-24.co.uk.
 
-###Delegating the subdomain in Route 53.
+### Delegating the subdomain in Route 53.
 
 * Click ‘Back to Hosted Zones’
 * Select the main ‘example.com’ zone, then click ‘Go to Record Sets’
@@ -107,7 +107,7 @@ In standard Bind zonefile format this would look like:
 * * *
 
 
-###Testing the DNS setup.
+### Testing the DNS setup.
 
 If everything is setup properly, test.dyn.example.com should resolve to 1.2.3.4.
 
@@ -119,7 +119,7 @@ In a shell on OSX, Linux and Unix,  you can use the command line tool dig.
 
 Otherwise, if you search the internet for ‘dns lookup tool’ there are many free tools you can use for a  test lookup.
 
-###Building the configuration file.
+### Building the configuration file.
 
 Our system uses a json config file in AWS S3  to store user and hostname information.
 
@@ -178,7 +178,7 @@ Asia Pacific Tokyo		ap-northeast-1
 
  
 
-###Creating an S3 bucket and uploading the config.
+### Creating an S3 bucket and uploading the config.
 
 * Navigate to S3 in the AWS console and click ‘Create Bucket’.
 
