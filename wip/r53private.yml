@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A CloudFormation template for creating a Private Hosted Zone in Route53.
+Parameters:
+  Name:
+    Description: A fully-qualified domain name.
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: (?!-)[a-zA-Z0-9-.]*(?<!-)
+    ConstraintDescription: must be a valid fully-qualified domain name.
+    Default: ''
+  Comment:
+    Description: An optinal comment about the hosted zone.
+    Type: String
+    MinLength: '1'
+    MaxLength: '255'
+    AllowedPattern: '[-_ a-zA-Z0-9]*'
+    ConstraintDescription: can contain only alphanumeric characters, spaces, dashes
+      and underscores.
+    Default: Managed by CloudFormation.
+  VpcId:
+    Description: An ID of the VPC for which to create Private Hosted Zone.
+    Type: AWS::EC2::VPC::Id
+Resources:
+  PrivateHostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: ''
+      Name: !Ref 'Name'
+      VPCs:
+        - VPCId: !Ref 'VpcId'
+          VPCRegion: !Ref 'AWS::Region'
+      HostedZoneTags:
+        - Key: StackName
+          Value: !Ref 'AWS::StackName'
+Outputs:
+  PrivateHostedZoneName:
+    Description: The fully-qualified private domain name.
+    Value: !Ref 'Name'
+  PrivateHostedZoneID:
+    Description: The ID of the Private Hosted Zone.
+    Value: !Ref 'PrivateHostedZone'

@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  myDistribution:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: www.example.com
+          Id: myCustomOrigin
+          CustomOriginConfig:
+            HTTPPort: '80'
+            HTTPSPort: '443'
+            OriginProtocolPolicy: http-only
+        Enabled: 'true'
+        Comment: Somecomment
+        DefaultRootObject: index.html
+        Logging:
+          IncludeCookies: 'true'
+          Bucket: mylogs.s3.amazonaws.com
+          Prefix: myprefix
+        Aliases:
+        - mysite.example.com
+        - "*.yoursite.example.com"
+        DefaultCacheBehavior:
+          TargetOriginId: myCustomOrigin
+          SmoothStreaming: 'false'
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: all
+          TrustedSigners:
+          - 1234567890EX
+          - 1234567891EX
+          ViewerProtocolPolicy: allow-all
+        CustomErrorResponses:
+        - ErrorCode: '404'
+          ResponsePagePath: "/error-pages/404.html"
+          ResponseCode: '200'
+          ErrorCachingMinTTL: '30'
+        PriceClass: PriceClass_200
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: whitelist
+            Locations:
+            - AQ
+            - CV
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: 'true'

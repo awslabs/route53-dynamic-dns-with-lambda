@@ -1,0 +1,39 @@
+---
+swagger: "2.0"
+info:
+  version: "2017-10-24T05:19:29Z"
+  title: "dynamic_dns_lambda_api"
+host: "poewrl97wi.execute-api.us-west-2.amazonaws.com"
+basePath: "/prod"
+schemes:
+- "https"
+paths:
+  /:
+    get:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:434941873588:function:dynamic_dns/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        requestTemplates:
+          application/json: "{\n    \"execution_mode\" : \"$input.params('mode')\"\
+            ,\n    \"source_ip\" : \"$context.identity.sourceIp\",\n    \"internal_ip\"\
+            \ : \"$input.params('internalIp')\",\n    \"query_string\" : \"$input.params().querystring\"\
+            ,\n    \"set_hostname\" : \"$input.params('hostname')\",\n    \"validation_hash\"\
+            \ : \"$input.params('hash')\"\n}"
+        type: "aws"
+definitions:
+  Empty:
+    type: "object"
+    title: "Empty Schema"

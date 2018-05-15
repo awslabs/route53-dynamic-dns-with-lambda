@@ -1,0 +1,98 @@
+to do:
+X fix mmin in ipv6 client
+X normalize naming in boto3.client route53 2 lambdas differ
+document template parts
+add tags containing template location for code
+fix trailing . discrepancies in hostnames
+clarify hash/ip security
+X parameterize ddb rcu
+NA enable internal zone - needs VPC association - document it -including cf requirement for ipv6
+NA auto-create delegation records
+check ddb fields required?
+X DDB field to restrict internal ip
+DDB field to allow reads
+X DDB field to log last ip request
+
+## Testing 
+cf & alias on existing zone - done
+cf no alias new zone
+cf alias new zone
+no cf - done
+9557F963635A77DD
+
+## ipv6 discovery
+
+27E82838FC07A0D6
+ 
+
+nmap -sP -6 2601:647:302:362f::/64
+
+/opt/usr/exec/dynamic_dns_lambda_client.sh --hostname noonoo.greathou.se. --secret 9557F963635A77DD --url ddns.greathou.se --ip-source public
+./dynamic_dns_lambda_client.sh --hostname noonoo.greathou.se. --secret 9557F963635A77DD --url vowce0jnvl.execute-api.us-west-2.amazonaws.com/prod --ip-source en0
+https://tt.amazon.com/0135355363
+
+to do:
+injevct env vars for lambda
+cognito?
+api keys?
+ipv6
+pre-populate ddb
+create api. custom record / custom domain
+ipv6 endpoint
+can I deploy serverless template 'normal' way? in cfn
+fix variables consistency in lambda & api calls
+use with existing route53 zone
+
+
+aws s3 cp ./route53-ddns-sless.yml s3://ddns-t1-us-west-2-456708182294 --region us-west-2 --profile sgreat-cfn
+
+aws cloudformation create-stack --stack-name ddns-sless --template-url https://s3-us-west-2.amazonaws.com/ddns-t1-us-west-2-456708182294/route53-ddns-sless.yml --profile sgreat-cfn --capabilities CAPABILITY_NAMED_IAM
+
+aws cloudformation deploy     --template-file ./route53-ddns.yml     --stack-name ddns-sless     --capabilities CAPABILITY_NAMED_IAM --profile sgreat-cfn
+
+aws lambda invoke  --region us-west-2 --function-name "arn:aws:lambda:us-west-2:456708182294:function:ddns-t1_lambda_ddns" --profile sgreat-cfn --payload file://./test.json ./outfile.txt
+
+./dynamic_dns_lambda_client.sh host1.juno.net. SHARED_SECRET_1 "nzjsusgqwk.execute-api.us-west-2.amazonaws.com/prod"
+
+https://nzjsusgqwk.execute-api.us-west-2.amazonaws.com/prod
+arn:aws:execute-api:us-west-2:456708182294:nzjsusgqwk/*/GET/
+
+aws dynamodb put-item --profile sgreat-cfn --table-name ddns-sless-2-config --item '{"hostname": {"S": "host1.juno.net."}, "aws_region": {"S": "us-west-2"},"zone_id": {"S": "ZWK7MXMWHQRQE"}, "ttl": {"N": "60"},"record_type": {"S": "A"}, "shared_secret": {"S": "SHARED_SECRET_1"}, "lock_record": {"BOOL": false}, "ip_address": {"S": "1.1.1.1"}, "last_checked": {"S": "z"}, "last_updated": {"S": "v"}}'
+
+aws dynamodb get-item --profile sgreat-cfn --table-name ddns-sless-config --key '{"hostname": {"S": "host1.juno.net."}, "record_type": {"S": "A"}}'
+
+aws dynamodb update-item --profile sgreat-cfn --table-name ddns-sless-config --key '{"hostname": {"S": "host1.juno.net."}, "record_type": {"S": "A"}}' --update-expression "SET mac_address = :m"  --expression-attribute-values '{":m": {"S": "FF:00:AA:33:EE:CC"}}' --return-values UPDATED_OLD
+
+    https://bd13y2c0p9.execute-api.us-west-2.amazonaws.com/prod
+    
+./dynamic_dns_lambda_client.sh --hostname "host1.juno.net." --secret SHARED_SECRET_1 --url https://xydydy7xy5.execute-api.us-west-2.amazonaws.com/prod --ip-source 1.1.1.1
+./dynamic_dns_lambda_client.sh --hostname "host1.juno.net." --secret SHARED_SECRET_1 --url d3siiuow0522zf.cloudfront.net
+
+2601:647:303:177d:526a:3ff:fea6 # rody 50:6A:03:A6:F5:72
+2601:647:303:177d:873:cca1:7560:eb51 osx secured 04:0c:ce:df:a8:b6 
+2601:647:303:177d:b889:c5d7:a04a:d71a osx temp -used to surf
+
+''.join(random.choice('0123456789ABCDEF') for i in range(16))
+cname
+./dynamic_dns_lambda_client.sh --hostname "noonoo.greathou.se." --secret 274743 --url d30k01tgt87w0q.cloudfront.net
+./dynamic_dns_lambda_client.sh --hostname "noonoo.greathou.se." --secret 274743 --url ddns.greathou.se
+nocname
+./dynamic_dns_lambda_client.sh --hostname "muno.greathou.se." --secret 274743 --url d1iph6in1dkcdt.cloudfront.net
+./dynamic_dns_lambda_client.sh --hostname "noonoo.greathou.se." --secret 9557F963635A77DD --url ddns.greathou.se
+
+run options:
+simple ipv4 - api only, no cert, existing domain or new domain
+ipv6 , cfn, no cert
+ipv6, cfn, cert
+
+--
+lambda test event
+{
+  "StackId": "12345",
+    "RequestId": "12345",
+    "RequestType": "12345",
+      "LogicalResourceId": "12345",
+      "ResourceProperties": { "run_mode": "first_run",
+"cloudfront_url": "www.foo.com"
+}
+}
