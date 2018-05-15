@@ -75,7 +75,6 @@ In our example, it’s ‘ZU040511OI4C4’
 
 * * *
 
-
 ### Delegating the subdomain.
 
 If your main ‘example.com’ zone is hosted in Route 53, skip to ‘Delegating the subdomain in Route 53’.
