@@ -17,7 +17,7 @@ The benefits and overall architecture of the system described in [Building a Ser
 - Network discovery: Enables a single host on a network segment to set DNS entries for multiple other hosts on the same network.
 
 ---
-###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Ouputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
+###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Outputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
 ---
 ### Setup Guide 
 
@@ -93,7 +93,7 @@ Provisioned capacity affects both [scalability](https://docs.aws.amazon.com/amaz
 Sometimes required to force a stack update.  
 The system does not actually track the version, if needed increment or simply change it to another arbitrary digit.  
 
-###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Ouputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
+###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Outputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
 ---
 ### CloudFormation Stack Outputs  
 
@@ -120,7 +120,7 @@ If the Stack built a new Zone, use these to:
 [Associate the Zone](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-name-servers-glue-records.html) with your registered Domain,    
 or [delegate the zone as a subdomain](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingNewSubdomain.html#UpdateDNSParentDomain). 
 
-###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Ouputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
+###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Outputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
 ---
 ### Configuration Guide     
 
@@ -178,7 +178,7 @@ Optional: [Network Discovery](#network-discovery) uses *shared_secret* to group 
 * *ttl*  
 Set for (in seconds) custom Route53 record TTL.
 
-###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Ouputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
+###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Outputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
 --- 
 ### Security Considerations    
 
@@ -219,7 +219,7 @@ Implementation of API Gateway's [API Keys / Usage Plans](https://docs.aws.amazon
 
 * Publishing private ipv4 addresses to a public Route53 Zone leaks those addresses publicly.  
 
-###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Ouputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
+###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Outputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
 ---
 ### Network Discovery       
 Network Discovery enables a single host to set dns entries for other hosts on the same network.  
@@ -245,7 +245,7 @@ For ipv4, you could use nmap to scan the network.  This method is impractical fo
 Network discovery will not work as implemented inside a VPC as VPC is unicast only.  
 *If you have feedback on the utility of network-discovery or thoughts on improvements, please let us know!*
 
-###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Ouputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
+###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Outputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
 ---
 ### API reference  
 
@@ -273,7 +273,7 @@ Examples of interacting with the API using curl
 * List hosts in group for [network discovery](#network-discovery) - *mode=list_hosts*  
 `curl -q -s "https://ddns.example.com?mode=list_hosts&hostname=foo.example.com&hash=ABCD123"`  
 
-###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Ouputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
+###### *Navigate* | [*Top*](#route53-dynamic-dns-with-lambda) | [*Setup*](#setup-guide) | [*Outputs*](#cloudformation-stack-outputs) | [*Configuration*](#configuration-guide) | [*Security*](#security-considerations) | [*Network Discovery*](#network-discovery) | [*API Reference*](#api-reference) |   
 --- 
 
 
