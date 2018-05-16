@@ -5,7 +5,7 @@ Description: Serverless dynamic DNS & device discovery service for ipv4 & ipv6
 Parameters:
   route53ZoneName:
     Type: String
-    Default: 'greathou.se'
+    Default: 'example.com'
     Description: "Required: Route53 Zone, either existing or name to be created. -- Must not end in '.' -- If it's an existing zone, it must match the zone id passed in route53ZoneId."
     #AllowedPattern: ^([a-zA-Z0-9-].)+[a-zA-Z0-9-]$  #commented out to support unicode
     
