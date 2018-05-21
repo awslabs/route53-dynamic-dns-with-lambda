@@ -37,6 +37,8 @@ Options:
     --secret SECRET
         Secret to use when validating the request for the hostname.
         Required argument.
+    --api-key
+        Pass the Amazon API Gateway API Key
     --url API_URL
         The URL where to send the requests.
         Required argument.
@@ -111,8 +113,7 @@ while [[ $# -ge 1 ]]; do
             shift
             ;;
         --cache)
-            if [ -z "$2" 
-            ] ; then
+            if [ -z "$2" ] ; then
                 fail "\"$1\" argument needs a value."
             fi
             if [[ $2 =~ [0-9]+ ]]; then
@@ -135,6 +136,13 @@ while [[ $# -ge 1 ]]; do
 			listHosts=true
             shift
             ;;
+        --api-key)
+            if [ -z "$2" ] ; then
+                fail "\"$1\" argument needs a value."
+            fi
+			apiKey="$2"
+            shift
+            ;;
         *)
             fail "Unrecognized option $1."
             ;;
@@ -152,7 +160,7 @@ fi
 cacheFile="$cacheFileDir$myHostname$ipVersion$cacheFileExt"
 
 ## get public IP from reflector to generate hash &/or set IP
-myPublicIP=$(curl -q --$ipVersion -s  -H "$apiHeader" "$myAPIURL?mode=get" | jq -r '.return_message //empty')
+myPublicIP=$(curl -q --$ipVersion -s  -H "x-api-key: $apiKey" "$myAPIURL?mode=get" | jq -r '.return_message //empty')
 
 if [ "$ipSource" = "public" ] || [ -z "$ipSource" ]; then
     myIp=$myPublicIP
@@ -198,12 +206,12 @@ else
 fi
 
 if [ "$listHosts" = "true" ]; then
-    reply=$(curl -q --$ipVersion -s -H "$apiHeader" "$myAPIURL?mode=list_hosts&hostname=$myHostname&hash=$myHash")
+    reply=$(curl -q --$ipVersion -s -H "x-api-key: $apiKey" "$myAPIURL?mode=list_hosts&hostname=$myHostname&hash=$myHash")
 # Call the API in set mode to update Route 53
 elif [ "$listHosts" != "true" ] && [ "$ipSource" = "public" ]; then
-    reply=$(curl -q --$ipVersion -s -H "$apiHeader" "$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash")
+    reply=$(curl -q --$ipVersion -s -H "x-api-key: $apiKey" "$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash")
 else
-    reply=$(curl -q --$ipVersion -s -H "$apiHeader" "$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash&internalIp=$myIp")
+    reply=$(curl -q --$ipVersion -s -H "x-api-key: $apiKey" "$myAPIURL?mode=set&hostname=$myHostname&hash=$myHash&internalIp=$myIp")
 fi
 
 if [ "$(echo "$reply" | jq -r '.return_status //empty')" == "success" ]; then

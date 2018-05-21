@@ -5,7 +5,7 @@ Description: Serverless dynamic DNS & device discovery service for ipv4 & ipv6
 Parameters:
   route53ZoneName:
     Type: String
-    Default: 'example.com'
+    Default: 'yourdomain.net'
     Description: "Required: Route53 Zone, either existing or name to be created. -- Must not end in '.' -- If it's an existing zone, it must match the zone id passed in route53ZoneId."
     #AllowedPattern: ^([a-zA-Z0-9-].)+[a-zA-Z0-9-]$  #commented out to support unicode
     
@@ -24,7 +24,13 @@ Parameters:
     Default: 'ddns'
     Description: "API Endpoint Custom Alias.  Required for enableCloudFront:withCustomAlias"
     #AllowedPattern: ^[a-zA-Z0-9]*$ #commented out to support unicode
-    
+
+  useApiKey:
+    Default: true
+    Type: String
+    AllowedValues: [false, true]
+    Description: "Enable an API key to protect your API Gateway"
+        
   enableCloudFront:
     Default: false
     Type: String
@@ -43,29 +49,29 @@ Parameters:
     Description: "Populate to use ACM Certificate.  Required to use a custom dns endpoint (Alias) for your API. Full ARN of an ACM SSL Certificate in us-east-1 Region.  -- i.e. arn:aws:acm:us-east-1:123456789012:certificate/a1aaab22-11ab-ab12-cd34-12345abc0ab0"
 
   ddbRcu:
-    Default: '3'
+    Default: '2'
     Type: String
     Description: DynamoDB Table Read Capacity Unit - leave at default unless you deploy at significant scale
     
   ddbWcu:
-    Default: '3'
+    Default: '2'
     Type: String
     Description: DynamoDB Table Write Capacity Unit - leave at default unless you deploy at significant scale
 
   ddbGsiRcu:
-    Default: '3'
+    Default: '2'
     Type: String
     Description: DynamoDB Global Secondary Index Read Capacity Unit - leave at default unless you deploy at significant scale
     
   ddbGsiWcu:
-    Default: '3'
+    Default: '2'
     Type: String
     Description: DynamoDB Global Secondary Index Write Capacity Unit - leave at default unless you deploy at significant scale
                 
   templateVersion:
     Type: String
-    Default: 1
-    Description: "For debugging, increment this parameter to force CFN to re-run the template"
+    Default: 0
+    Description: "For debugging, increment this parameter to force CFN to re-run the template, and setupLambda"
     ## Uses a matching output to force the update
 
 Metadata: 
@@ -84,6 +90,7 @@ Metadata:
         Parameters: 
           - enableCloudFront
           - apiCname
+          - useApiKey
           - acmCertificateARN
           - cloudFrontPriceClass
       -
@@ -107,7 +114,8 @@ Conditions:
         - !Not [!Equals [ !Ref acmCertificateARN , '']]
     cloudfrontNoAlias: !Equals [ !Ref enableCloudFront , 'withoutCustomAlias']
     enableCloudFront: !Or [ Condition: cloudfrontAlias, Condition: cloudfrontNoAlias]
-
+    enableApiKey: !Equals [ !Ref useApiKey , 'true']
+    disableApiKey: !Equals [ !Ref useApiKey , 'false']
 Mappings: 
     cloudFrontPriceClassMapping: 
       US-Canada-Europe: 
@@ -200,6 +208,7 @@ Resources:
           route_53_zone_id: !If [useExistingZone, !Ref route53ZoneId, !Ref route53newZone]
           route_53_zone_name: !Ref route53ZoneName
           default_ttl: !Ref defaultTtl
+          template_version: !Ref templateVersion
       Code:
         S3Bucket: !Ref ddnsConfigBucket
         S3Key: ddns_lambda.zip
@@ -224,6 +233,8 @@ Resources:
           route_53_zone_name: !Ref route53ZoneName
           aws_region: !Ref AWS::Region
           api_cname: !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', '']
+          api_key_id: !If [enableApiKey, !Ref apiKey, '']
+          template_version: !Ref templateVersion
       Code:
         S3Bucket: !Ref ddnsConfigBucket
         S3Key: setup_lambda.zip
@@ -232,7 +243,8 @@ Resources:
 # Invokes setupLambda to populate sample data to DDB
   runSetup:
     Type: Custom::setupLambda
-    DependsOn: setupLambda
+    DependsOn: 
+      - setupLambda
     Properties:
       ServiceToken: !GetAtt setupLambda.Arn
       Region: !Ref AWS::Region
@@ -269,6 +281,9 @@ Resources:
       Runtime: python2.7
       Timeout: 120
       Role: !GetAtt lambdaDdnsRole.Arn
+      Environment:
+        Variables:
+          template_version: !Ref templateVersion
       Code:
         ZipFile: |
           from __future__ import print_function
@@ -373,6 +388,9 @@ Resources:
       stackName: !Ref AWS::StackName
       s3TargetBucket: !Ref ddnsConfigBucket
       file_name: 'setup_lambda'
+      Environment:
+        Variables:
+          template_version: !Ref templateVersion
       lambda_body: |
             #force function to run by changing this: 0
             from __future__ import print_function
@@ -396,6 +414,7 @@ Resources:
             route_53_zone_name = os.environ['route_53_zone_name']
             aws_region = os.environ['aws_region']
             api_cname = os.environ['api_cname']
+            api_key_id = os.environ['api_key_id']
             def send_response(request, response, status=None, reason=None):
                 """ Send our response to the pre-signed URL supplied by CloudFormation"""
                 if status is not None:
@@ -407,7 +426,6 @@ Resources:
                     body = json.dumps(response)
                     https = httplib.HTTPSConnection(url.hostname)
                     https.request('PUT', url.path+'?'+url.query, body)
-                    # debug
                     print(url.hostname)
                     print('PUT', url.path+'?'+url.query, body)
                 print(response)
@@ -464,8 +482,6 @@ Resources:
                       'comment': 'example record'
                       }
                     )
-                      #'aws_region': aws_region,
-                      #'zone_id': route_53_zone_id, 
                     dynamodb_table.put_item(
                       Item={
                       'hostname': 'example-record.' + route_53_zone_name + '.', 
@@ -483,12 +499,20 @@ Resources:
                       'comment': 'example record'
                       }
                     )
-                      #'aws_region': aws_region,
-                      #'zone_id': route_53_zone_id, 
                     print('Populated sample DDB entries')
                 except:
                     print('Failed to populate sample DDB entries')
-                  
+
+            def get_api_key(api_key_id):
+                apigateway = boto3.client('apigateway')
+                api_key_response = apigateway.get_api_key(apiKey=api_key_id, includeValue=True)
+                print('Getting api key')
+                print(api_key_response['value'])
+                try:
+                  return api_key_response['value']
+                except:
+                  print('fail')
+                              
             ## Main Lambda handler
             def lambda_handler(event, context):
                 response = {
@@ -516,6 +540,9 @@ Resources:
                   print('Run mode: '+run_mode)
                   if run_mode == 'first_run':
                     populate_ddb(ddns_config_table, route_53_zone_name)
+                    if api_key_id:
+                       api_key = get_api_key(api_key_id)
+                       response['Data'] = {'api_key': api_key }
                   elif run_mode == 'second_run':
                     print("Setting api CloudFront cname: " + api_cname + " CNAME " + cloudfront_url)
                     route_53_return_dict = route53_set(aws_region, route_53_zone_id, api_cname, 300, 'CNAME', cloudfront_url)
@@ -537,6 +564,9 @@ Resources:
       stackName: !Ref AWS::StackName
       s3TargetBucket: !Ref ddnsConfigBucket
       file_name: 'ddns_lambda'
+      Environment:
+        Variables:
+          template_version: !Ref templateVersion
       lambda_body: |
         #force function to run by changing this: 0
         # version works with DDB
@@ -913,8 +943,8 @@ Resources:
       DistributionConfig:
         PriceClass: !FindInMap [cloudFrontPriceClassMapping, !Ref cloudFrontPriceClass, value]
         Origins:
-          - DomainName: !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com'
-            Id: !Ref ddnsApi
+          - DomainName: !If [enableApiKey, !Sub '${ddnsApiKeyed}.execute-api.${AWS::Region}.amazonaws.com', !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com']
+            Id: !If [enableApiKey, !Ref ddnsApiKeyed, !Ref ddnsApi]
             OriginPath: "/prod"
             CustomOriginConfig:
               HTTPSPort: '443'
@@ -929,7 +959,7 @@ Resources:
           AcmCertificateArn: !Ref acmCertificateARN
           SslSupportMethod: 'sni-only' 
         DefaultCacheBehavior:
-          TargetOriginId: !Ref ddnsApi
+          TargetOriginId: !If [enableApiKey, !Ref ddnsApiKeyed, !Ref ddnsApi]
           ForwardedValues:
             QueryString: 'true'
           ViewerProtocolPolicy: redirect-to-https
@@ -940,6 +970,9 @@ Resources:
         Comment: !Ref AWS::StackName
         HttpVersion: http2
         IPV6Enabled: True
+        CustomErrorResponses:
+        - ErrorCode: 403
+          ErrorCachingMinTTL: 0
       Tags:
         - Key: created-by
           Value: !Ref AWS::StackName
@@ -951,8 +984,8 @@ Resources:
       DistributionConfig:
         PriceClass: !FindInMap [cloudFrontPriceClassMapping, !Ref cloudFrontPriceClass, value]
         Origins:
-          - DomainName: !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com'
-            Id: !Ref ddnsApi
+          - DomainName: !If [enableApiKey, !Sub '${ddnsApiKeyed}.execute-api.${AWS::Region}.amazonaws.com', !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com']
+            Id: !If [enableApiKey, !Ref ddnsApiKeyed, !Ref ddnsApi]
             OriginPath: "/prod"
             CustomOriginConfig:
               HTTPSPort: '443'
@@ -962,7 +995,7 @@ Resources:
                 - TLSv1.1
         Enabled: True
         DefaultCacheBehavior:
-          TargetOriginId: !Ref ddnsApi
+          TargetOriginId: !If [enableApiKey, !Ref ddnsApiKeyed, !Ref ddnsApi]
           ForwardedValues:
             QueryString: 'true'
           ViewerProtocolPolicy: redirect-to-https
@@ -973,20 +1006,16 @@ Resources:
         Comment: !Ref AWS::StackName
         HttpVersion: http2
         IPV6Enabled: True
+        CustomErrorResponses:
+        - ErrorCode: 403
+          ErrorCachingMinTTL: 0
       Tags:
         - Key: created-by
           Value: !Ref AWS::StackName
-  ## Un-implemented as CloudFormation does not support dns validation for ACM (3/2018)
-  # ddnsAcm:
-  #   Type: AWS::CertificateManager::Certificate
-  #   Properties:
-  #     DomainName: !Sub '${apiCname}.${route53ZoneName}'
-  #     DomainValidationOptions:
-  #       - DomainName: !Sub '${apiCname}.${route53ZoneName}'
-  #         ValidationDomain: !Ref route53ZoneName
 
   ddnsApi:
     Type: "AWS::ApiGateway::RestApi"
+    Condition: disableApiKey
     Properties:
       Name: !Sub ${AWS::StackName}-api
       ApiKeySourceType: HEADER
@@ -1013,6 +1042,8 @@ Resources:
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
+              security:
+              - api_key: []
               x-amazon-apigateway-integration:
                 responses:
                   default:
@@ -1033,54 +1064,102 @@ Resources:
           Empty:
             type: "object"
             title: "Empty Schema"
-
-  ddnsApiProdStage:
-    Type: "AWS::ApiGateway::Stage"
+            
+  ddnsApiKeyed:
+    Type: "AWS::ApiGateway::RestApi"
+    Condition: enableApiKey
     Properties:
-      DeploymentId: !Ref ddnsApiDeployment
-      MethodSettings:
-        - HttpMethod: '*'
-          ResourcePath: /*
-      RestApiId: !Ref ddnsApi
-      StageName: LATEST
+      Name: !Sub ${AWS::StackName}-api
+      ApiKeySourceType: HEADER
+      EndpointConfiguration: 
+        Types: 
+          - REGIONAL
+      Body:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        basePath: "/prod"
+        schemes:
+        - "https"
+        paths:
+          "/":
+            get:
+              consumes:
+              - "application/json"
+              produces:
+              - "application/json"
+              responses:
+                "200":
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              security:
+              - api_key: []
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                uri: 
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaDdnsFunction.Arn}/invocations
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                requestTemplates:
+                  application/json: "{\n    \"execution_mode\" : \"$input.params('mode')\"\
+                    ,\n    \"source_ip\" : \"$context.identity.sourceIp\",\n    \"internal_ip\"\
+                    \ : \"$input.params('internalIp')\",\n    \"query_string\" : \"$input.params().querystring\"\
+                    ,\n    \"set_hostname\" : \"$input.params('hostname')\",\n    \"validation_hash\"\
+                    \ : \"$input.params('hash')\"\n,\n    \"ipv6_address\"\
+                    \ : \"$input.params('ipv6_address')\"\n}"
+                type: "aws"
+        definitions:
+          Empty:
+            type: "object"
+            title: "Empty Schema"
+        securityDefinitions:
+          api_key:
+            type: "apiKey"
+            name: "x-api-key"
+            in: "header"
 
+      
   ddnsApiDeployment:
     Type: AWS::ApiGateway::Deployment
     Properties:
-      RestApiId: !Ref 'ddnsApi'
+      RestApiId: !If [enableApiKey, !Ref ddnsApiKeyed, !Ref ddnsApi]
       StageName: prod
 
-## Work to build an API Key
-#  apiGatewayUsagePlan:
-#    Type: AWS::ApiGateway::UsagePlan
-#    Properties:
-#      ApiStages:
-#      - ApiId: !Ref 'ddnsApi'
-#        Stage: !Ref 'ddnsApiProdStage'
-#      Description: Unlimited usage plan for API key
-#      UsagePlanName: !Sub ${AWS::StackName}-usage-plan
-#
-#  apiKey: 
-#    Type: "AWS::ApiGateway::ApiKey"
-#    DependsOn: 
-#      - "ddnsApiDeployment"
-#      - "ddnsApi"
-#      - "ddnsApiProdStage"
-#    Properties: 
-#      Name: !Sub ${AWS::StackName}-key
-#      #Name: x-api-key
-#      Description: "CloudFormation API Key V1"
-#      Enabled: "true"
-#      StageKeys: 
-#        - RestApiId: !Ref 'ddnsApi'
-#          StageName: !Ref 'ddnsApiProdStage'
-#          
-#  usagePlanKey:
-#    Type: "AWS::ApiGateway::UsagePlanKey"
-#    Properties : 
-#      KeyId: !Ref 'apiKey'
-#      KeyType: API_KEY
-#      UsagePlanId: !Ref 'apiGatewayUsagePlan'
+  apiGatewayUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Condition: enableApiKey
+    DependsOn: 
+      - "ddnsApiDeployment"
+    Properties:
+      ApiStages:
+      - ApiId: !Ref ddnsApiKeyed
+        Stage: 'prod'
+      Description: Unlimited usage plan for API key
+      UsagePlanName: !Sub ${AWS::StackName}-usage-plan
+ 
+  apiKey: 
+    Type: "AWS::ApiGateway::ApiKey"
+    Condition: enableApiKey
+    DependsOn: 
+      - "ddnsApiDeployment"
+    Properties: 
+      Name: !Sub ${AWS::StackName}-key
+      Enabled: "true"
+      StageKeys: 
+        - RestApiId: !Ref 'ddnsApiKeyed'
+          StageName: 'prod'
+          
+  usagePlanKey:
+    Type: "AWS::ApiGateway::UsagePlanKey"
+    Condition: enableApiKey
+    Properties : 
+      KeyId: !Ref 'apiKey'
+      KeyType: API_KEY
+      UsagePlanId: !Ref 'apiGatewayUsagePlan'
       
   lambdaDdnsRole:
     Type: AWS::IAM::Role
@@ -1133,13 +1212,11 @@ Resources:
                   - dynamodb:UpdateItem  
                   - dynamodb:Scan   
                   - dynamodb:Query
-              # unused, allows cert creation
-              #- Resource: "*"
-              #  Effect: Allow
-              #  Action:
-              #    - acm:ListCertificates
-              #    - acm:DescribeCertificate
-              #    - acm:RequestCertificate
+              - Resource: 
+                  - !Sub 'arn:aws:apigateway:${AWS::Region}::/apikeys/*'
+                Effect: Allow
+                Action:
+                  - apigateway:GET
 
   apiGatewayRole:
     Type: AWS::IAM::Role
@@ -1168,7 +1245,7 @@ Resources:
   lambdaInvocationPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ddnsApi}/*/GET/'
+      SourceArn: !If [enableApiKey, !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ddnsApiKeyed}/*/GET/', !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ddnsApi}/*/GET/']
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       FunctionName: !GetAtt lambdaDdnsFunction.Arn
@@ -1176,17 +1253,19 @@ Resources:
 Outputs:
   apiUrl:
     Value:
-      !If [enableCloudFront, !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', !GetAtt ddnsCloudFront.DomainName],  !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com/prod']
+      !If [enableCloudFront, !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', !GetAtt ddnsCloudFront.DomainName],  !If [enableApiKey, !Sub '${ddnsApiKeyed}.execute-api.${AWS::Region}.amazonaws.com/prod', !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com/prod']]
     Description:
       The API URL to use in your client.
+      
   apiOriginURL:
     Value:
-      !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
+      !If [enableApiKey, !Sub '${ddnsApiKeyed}.execute-api.${AWS::Region}.amazonaws.com/prod', !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com/prod']
+
     Description:
       API Gateway url, use for cname if manually implementing an API custom alias.
   cloudFrontURL:
     Value:
-      !If [cloudfrontAlias, !GetAtt ddnsCloudFrontAliased.DomainName, !GetAtt ddnsCloudFront.DomainName]
+      !If [enableCloudFront, !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', !GetAtt ddnsCloudFront.DomainName],  '']
     Description:
       CloudFront url, use for cname if manually implementing an API custom alias.
   route53ZoneName:
@@ -1200,11 +1279,12 @@ Outputs:
       !If [createNewZone, !Join [ " ", !GetAtt route53newZone.NameServers ] , '' ]
     Description:
       Name Servers for DNS Zone if created by stack.  Use for delegation of subdomain.
-#  apiKey: 
-#    Value:
-#      !Ref apiKey
-#    Description:
-#      Key required for API access.  Pass as http header x-api-key
+  apiKey: 
+    Condition: enableApiKey
+    Value:
+      !GetAtt runSetup.api_key
+    Description:
+      Key required for API access.  Pass as http header x-api-key
 
   templateVersion:
      Value: 

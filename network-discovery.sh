@@ -95,7 +95,7 @@ while [[ $# -ge 1 ]]; do
             if [ -z "$2" ] ; then
                 fail "\"$1\" argument needs a value."
             fi
-			apiHeader="x-api-key: $2"
+			apiKey="$2"
             shift
             ;;
         *)
@@ -123,11 +123,9 @@ elif [ "$ipVersion" = "ipv6" ]; then
         netScan=$(ndp -a |egrep -v fe80 | awk '{print $1 " " $2}')
     fi
 fi
-echo "$netScan"
 
-response=$($route53DdnsClient --hostname $myHostname --secret $mySharedSecret --url $myAPIURL --list-hosts)
+response=$($route53DdnsClient --hostname $myHostname --secret $mySharedSecret --api-key $apiKey --url $myAPIURL --list-hosts)
 hostList=$(echo $response |egrep -o '\[.*')
-echo "$hostList" |jq .
 hostCount=$(echo $hostList | jq '.| length')
  
 for ((i=0; i<hostCount; i++)); do
@@ -140,7 +138,7 @@ for ((i=0; i<hostCount; i++)); do
             setIp=(${setIp[0]})
             hostName=$(echo $hostList | jq -r --argjson recordId $i '.[$recordId].hostname')
             if [ "$myHostname" != "$hostName" ]; then
-                setResponse=$($route53DdnsClient --hostname $hostName --secret $mySharedSecret --url $myAPIURL  --ip-source $setIp --ip-version $ipVersion)
+                setResponse=$($route53DdnsClient --hostname $hostName --secret $mySharedSecret --api-key $apiKey --url $myAPIURL  --ip-source $setIp --ip-version $ipVersion)
                 echo $setResponse
                 echo
             fi
