@@ -198,9 +198,9 @@ echo "$(basename $0): Updating $myHostname to IP $myIp"
 ## Build the hashed token
 ## Check for shasum (OSX) vs sha256sum (Linux) then execute the appropriate command.
 if command -v shasum > /dev/null 2>&1 ; then
-	myHash=$(echo -n "$myPublicIP$myHostname$mySharedSecret" | shasum -a 256 | awk '{print $1}')
+	myHash=$(printf "$myPublicIP$myHostname$mySharedSecret" | shasum -a 256 | awk '{print $1}')
 elif command -v sha256sum  > /dev/null 2>&1 ; then
-	myHash=$(echo -n "$myPublicIP$myHostname$mySharedSecret" | sha256sum | awk '{print $1}')
+	myHash=$(printf "$myPublicIP$myHostname$mySharedSecret" | sha256sum | awk '{print $1}')
 else
 	fail "Neither shasum nor sha256sum executables were found on host."
 fi
