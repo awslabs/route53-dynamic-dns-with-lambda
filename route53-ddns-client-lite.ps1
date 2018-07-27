@@ -1,9 +1,13 @@
+#Lite client.  Does not support ipv6 or internal ip.
+
 #PowerShell: 
 # to enable scripts to run, you need to change execution policy to allow 3rd party scripts to run.
 # https://technet.microsoft.com/en-us/library/hh849812.aspx
 # To launch a subshell to run the script, use:
 # powershell –ExecutionPolicy Bypass
-#
+# Run as:
+# .\route53-ddns-client-lite.ps1 -myHostname foo.example.com. -mySharedSecret sharedsecret
+# -myAPIURL ddns.example.com -myAPIKEY apikey
 
 Param(
 [Parameter(Mandatory=$True,Position=1)][string]$myHostname,
@@ -11,18 +15,14 @@ Param(
 [Parameter(Mandatory=$True,Position=3)][string]$myAPIURL,
 [Parameter(Mandatory=$True,Position=4)][string]$myAPIKEY)
 
-#$myHostname = "must.end.in.dot."
-#$mySharedSecret = "CHECKDYNAMODB"
-#$myAPIURL = "https://" + "CHECKDYNAMODB"
-#$myAPIKEY = "CHECKDYNAMODB"
-
-$helptext = "If it doesn't work, call Microsoft ;)"
-$helptext
+# Add a trailing '.' if not submitted in argument
+If (!($myHostname.EndsWith("."))){
+	$myHostname = "$myHostname."
+}
 
 $getURL = $myAPIURL + "?mode=get"
 $webRequest = Invoke-WebRequest -Headers @{"x-api-key"="$myAPIKEY"} -URI $getURL
 
-#$webRequest.Content
 $myIP = $webRequest.Content.Replace('{"return_message": "', '').Replace('", "return_status": "success"}','')
 
 $message = $myIP + $myHostname + $mySharedSecret
