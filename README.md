@@ -6,7 +6,7 @@ Code and instructions for the version described in the blog can be found in the 
 
 The project implements a serverless dynamic DNS system using AWS Lambda, Amazon API Gateway, Amazon Route 53 and Amazon DynamoDB.   
 A bash reference client *route53-ddns-client.sh* is included, but the api calls for the system can be easily implemented in other languages.  
-The benefits and overall architecture of the system described in [Building a Serverless Dynamic DNS System with AWS](https://medium.com/aws-activate-startup-blog/building-a-serverless-dynamic-dns-system-with-aws-a32256f0a1d8) are still accurate.  
+The benefits and overall architecture of the system described in [Building a Serverless Dynamic DNS System with AWS](https://medium.com/aws-activate-startup-blog/building-a-serverless-dynamic-dns-system-with-aws-a32256f0a1d8) are still accurate.   
 
 #### The current project supports:
 - One step provisioning via AWS CloudFormation  

@@ -174,7 +174,7 @@ elif [[ $ipSource =~ ^[0-9a-z]+([:.][0-9]+){0,2}$ ]]; then
     	myIp="$(ifconfig "$ipSource" |egrep 'inet6' |egrep -v 'fe80'|egrep -v 'temporary'|egrep -io '([A-F0-9]{1,4}:){7}[A-F0-9]{1,4}')"
 		[ -z "$myIp" ] && fail "Couldn't get the IP of $ipSource"
     else
-    	fail "Interface source called, but ipVersion is not set." ## This should never happen.  Defaults et to ipv4 at top of script
+    	fail "Interface source called, but ipVersion is not set." ## This should never happen.  Defaults set to ipv4 at top of script
     fi
 ## match ipv4
 elif [[ "$ipSource" =~ ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$ ]]; then
