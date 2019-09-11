@@ -858,7 +858,7 @@ Resources:
                 # Tell Route 53 to set the DNS record.
                 # Then update the record in DynamoDB
                 else:
-                    return_status = route53_set(
+                    route_53_set_response = route53_set(
                         'set_record',
                         aws_region,
                         route_53_zone_id,
