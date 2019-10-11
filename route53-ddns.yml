@@ -572,7 +572,6 @@ Resources:
         # version works with DDB
         # Dynamic DNS via AWS API Gateway, Lambda & Route 53
         # Script variables use lower_case_
-        from __future__ import print_function
         import json
         import re
         import hashlib
@@ -709,8 +708,8 @@ Resources:
                 
         def validate_hash(set_hostname, source_ip, validation_hash, shared_secret):
             # Calculate the validation hash.
-            calculated_hash = hashlib.sha256(
-                source_ip + set_hostname + shared_secret).hexdigest()
+            calculated_hash = hashlib.sha256((
+              source_ip + set_hostname + shared_secret).encode('utf-8')).hexdigest()
             # Compare the validation_hash from the client to the
             # calculated_hash.
             # If they don't match, error out.
