@@ -223,7 +223,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${AWS::StackName}-setup
       Handler: index.lambda_handler
-      Runtime: python2.7
+      Runtime: python3.7
       Timeout: 120
       Role: !GetAtt lambdaDdnsRole.Arn
       Environment:
@@ -278,7 +278,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${AWS::StackName}-source-to-s3
       Handler: index.lambda_handler
-      Runtime: python2.7
+      Runtime: python3.7
       Timeout: 120
       Role: !GetAtt lambdaDdnsRole.Arn
       Environment:
@@ -286,13 +286,12 @@ Resources:
           template_version: !Ref templateVersion
       Code:
         ZipFile: |
-          from __future__ import print_function
           import boto3
           import os
           import zipfile
-          import httplib
+          import http.client
           import uuid
-          import urlparse
+          import urllib.parse
           import json
            
           print('Loading function')
@@ -306,9 +305,9 @@ Resources:
               if reason is not None:
                   response['Reason'] = reason
               if 'ResponseURL' in request and request['ResponseURL']:
-                  url = urlparse.urlparse(request['ResponseURL'])
+                  url = urllib.parse.urlparse(request['ResponseURL'])
                   body = json.dumps(response)
-                  https = httplib.HTTPSConnection(url.hostname)
+                  https = http.client.HTTPSConnection(url.hostname)
                   https.request('PUT', url.path+'?'+url.query, body)
               return response
           
@@ -342,7 +341,7 @@ Resources:
               except:
                 pass
               lambda_file = open('/tmp/index.py', 'w')
-              os.chmod('/tmp/index.py', 0777)
+              os.chmod('/tmp/index.py', 0o777)
               lambda_file.write(lambda_body)
               lambda_file.close()
               ## Build the zip archive
@@ -373,6 +372,8 @@ Resources:
               print(str(s3_response))
               print('Response Text: ' + str(response))
               return send_response(event, response)
+          
+          
 
 
   ## Invoke the sourceToS3Lambda function and send the body text of files to put in S3
@@ -393,14 +394,13 @@ Resources:
           template_version: !Ref templateVersion
       lambda_body: |
             #force function to run by changing this: 0
-            from __future__ import print_function
             import boto3
             import datetime  
             import random
             import os   
             import uuid
-            import httplib
-            import urlparse
+            import http.client
+            import urllib.parse
             import json
             import time
             
@@ -422,9 +422,9 @@ Resources:
                 if reason is not None:
                     response['Reason'] = reason
                 if 'ResponseURL' in request and request['ResponseURL']:
-                    url = urlparse.urlparse(request['ResponseURL'])
+                    url = urllib.parse.urlparse(request['ResponseURL'])
                     body = json.dumps(response)
-                    https = httplib.HTTPSConnection(url.hostname)
+                    https = http.client.HTTPSConnection(url.hostname)
                     https.request('PUT', url.path+'?'+url.query, body)
                     print(url.hostname)
                     print('PUT', url.path+'?'+url.query, body)
@@ -502,7 +502,7 @@ Resources:
                     print('Populated sample DDB entries')
                 except:
                     print('Failed to populate sample DDB entries')
-
+            
             def get_api_key(api_key_id):
                 apigateway = boto3.client('apigateway')
                 api_key_response = apigateway.get_api_key(apiKey=api_key_id, includeValue=True)
@@ -554,6 +554,8 @@ Resources:
                   ## will cause a stack rollback on failure and can leave the stack in a state that requires deletion.
                   #response['Status'] = 'FAILED'
                 return send_response(event, response)
+            
+            
 
   ddnsSourceToS3:
     Type: Custom::sourceToS3Lambda
