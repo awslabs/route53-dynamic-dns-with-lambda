@@ -25,7 +25,7 @@ fail () {
 help () {
     cat << EOF
 Set the IP for a specific hostname on route53
-dynamic_dns_lambda_client.sh [options]
+route53-ddns-client.sh [options]
 
 Options:
     -h, --help
