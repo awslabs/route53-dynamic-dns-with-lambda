@@ -140,7 +140,7 @@ def route53_set(execution_mode, aws_region, route_53_zone_id,
 def validate_hash(set_hostname, source_ip, validation_hash, shared_secret):
     # Calculate the validation hash.
     calculated_hash = hashlib.sha256((
-        source_ip + set_hostname + shared_secret).encode('utf-8')).hexdigest()
+      source_ip + set_hostname + shared_secret).encode('utf-8')).hexdigest()
     # Compare the validation_hash from the client to the
     # calculated_hash.
     # If they don't match, error out.
