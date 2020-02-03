@@ -348,7 +348,7 @@ Resources:
               zip_archive = zipfile.ZipFile(zip_file, 'w')
               zip_archive.write('/tmp/index.py', 'index.py')
               zip_archive.close()
-              zip_file = open(zip_file, 'r')
+              zip_file = open(zip_file, 'rb')
           
               ## Put the archive in S3
               try:
