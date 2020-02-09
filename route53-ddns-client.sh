@@ -35,7 +35,7 @@ Options:
         Hostname requires the trailing '.' in request and the DDB config table entry.
         Required argument.
     --secret SECRET
-        Secret to use when validating the request for the hostname.
+        Secret to use when validating the request for the hostname. This is referred to in the documentation as the Shared Secret.
         Required argument.
     --api-key
         Pass the Amazon API Gateway API Key
