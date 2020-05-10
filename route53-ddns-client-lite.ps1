@@ -23,7 +23,7 @@ If (!($myHostname.EndsWith("."))){
 $getURL = $myAPIURL + "?mode=get"
 $webRequest = Invoke-WebRequest -Headers @{"x-api-key"="$myAPIKEY"} -URI $getURL
 
-$myIP = $webRequest.Content.Replace('{"return_message": "', '').Replace('", "return_status": "success"}','')
+$myIP = $webRequest.Content.Replace('{"return_status": "success", "return_message": "', '').Replace('"}','')
 
 $message = $myIP + $myHostname + $mySharedSecret
 $sha256 = New-Object System.Text.StringBuilder 
