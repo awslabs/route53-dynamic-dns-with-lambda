@@ -1,3 +1,4 @@
+---
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Serverless dynamic DNS & device discovery service for ipv4 & ipv6
 ## Resource names are keyed off the Stack name.
@@ -7,8 +8,8 @@ Parameters:
     Type: String
     Default: 'yourdomain.net'
     Description: "Required: Route53 Zone, either existing or name to be created. -- Must not end in '.' -- If it's an existing zone, it must match the zone id passed in route53ZoneId."
-    #AllowedPattern: ^([a-zA-Z0-9-].)+[a-zA-Z0-9-]$  #commented out to support unicode
-    
+    # AllowedPattern: ^([a-zA-Z0-9-].)+[a-zA-Z0-9-]$  # commented out to support unicode
+
   route53ZoneId:
     Type: String
     Default: ''
@@ -18,19 +19,19 @@ Parameters:
     Type: String
     Default: 60
     Description: Default DNS record TTL, can be overridden for individual records in DynamoDB config.
-    
+
   apiCname:
     Type: String
     Default: 'ddns'
     Description: "API Endpoint Custom Alias.  Required for enableCloudFront:withCustomAlias"
-    #AllowedPattern: ^[a-zA-Z0-9]*$ #commented out to support unicode
+    # AllowedPattern: ^[a-zA-Z0-9]*$ # commented out to support unicode
 
   useApiKey:
     Default: true
     Type: String
     AllowedValues: [false, true]
     Description: "Enable an API key to protect your API Gateway"
-        
+
   enableCloudFront:
     Default: false
     Type: String
@@ -42,7 +43,7 @@ Parameters:
     Type: String
     AllowedValues: [US-Canada-Europe, US-Canada-Europe-Asia, All-Edge-Locations]
     Description: "Affects price, change propagation times, latency to clients.  See: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PriceClass.html"
-        
+
   acmCertificateARN:
     Default: ''
     Type: String
@@ -52,7 +53,7 @@ Parameters:
     Default: '2'
     Type: String
     Description: DynamoDB Table Read Capacity Unit - leave at default unless you deploy at significant scale
-    
+
   ddbWcu:
     Default: '2'
     Type: String
@@ -62,111 +63,111 @@ Parameters:
     Default: '2'
     Type: String
     Description: DynamoDB Global Secondary Index Read Capacity Unit - leave at default unless you deploy at significant scale
-    
+
   ddbGsiWcu:
     Default: '2'
     Type: String
     Description: DynamoDB Global Secondary Index Write Capacity Unit - leave at default unless you deploy at significant scale
-                
+
   templateVersion:
     Type: String
     Default: 0
     Description: "For debugging, increment this parameter to force CFN to re-run the template, and setupLambda"
     ## Uses a matching output to force the update
 
-Metadata: 
-  AWS::CloudFormation::Interface: 
-    ParameterGroups: 
-      - 
-        Label: 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
           default: "DNS Zone:"
-        Parameters: 
+        Parameters:
           - route53ZoneName
           - route53ZoneId
           - defaultTtl
-      - 
-        Label: 
+      -
+        Label:
           default: "CloudFront Configuration:"
-        Parameters: 
+        Parameters:
           - enableCloudFront
           - apiCname
           - useApiKey
           - acmCertificateARN
           - cloudFrontPriceClass
       -
-        Label: 
+        Label:
           default: "DynamoDB Configuration:"
-        Parameters: 
+        Parameters:
           - ddbRcu
           - ddbWcu
           - ddbGsiRcu
           - ddbGsiWcu
-                               
+
 Conditions:
-    useExistingZone: !Not [!Equals [ !Ref route53ZoneId , '']]
-    createNewZone: !Not [Condition: useExistingZone]
-    ## Build a CF dist with alias if:
-    ## enableCloudFront:withCustomAlias is set 
-    ## and apiCname and acmCertificateARN are not empty 
-    cloudfrontAlias: !And 
-        - !Equals [ !Ref enableCloudFront , 'withCustomAlias']
-        - !Not [!Equals [ !Ref apiCname , '']]
-        - !Not [!Equals [ !Ref acmCertificateARN , '']]
-    cloudfrontNoAlias: !Equals [ !Ref enableCloudFront , 'withoutCustomAlias']
-    enableCloudFront: !Or [ Condition: cloudfrontAlias, Condition: cloudfrontNoAlias]
-    enableApiKey: !Equals [ !Ref useApiKey , 'true']
-    disableApiKey: !Equals [ !Ref useApiKey , 'false']
-Mappings: 
-    cloudFrontPriceClassMapping: 
-      US-Canada-Europe: 
-        value: "PriceClass_100"
-      US-Canada-Europe-Asia: 
-        value: "PriceClass_200"
-      All-Edge-Locations: 
-        value: "PriceClass_All"
-        
+  useExistingZone: !Not [!Equals [!Ref route53ZoneId, '']]
+  createNewZone: !Not [Condition: useExistingZone]
+  ## Build a CF dist with alias if:
+  ## enableCloudFront:withCustomAlias is set
+  ## and apiCname and acmCertificateARN are not empty
+  cloudfrontAlias: !And
+    - !Equals [!Ref enableCloudFront, 'withCustomAlias']
+    - !Not [!Equals [!Ref apiCname, '']]
+    - !Not [!Equals [!Ref acmCertificateARN, '']]
+  cloudfrontNoAlias: !Equals [!Ref enableCloudFront, 'withoutCustomAlias']
+  enableCloudFront: !Or [Condition: cloudfrontAlias, Condition: cloudfrontNoAlias]
+  enableApiKey: !Equals [!Ref useApiKey, 'true']
+  disableApiKey: !Equals [!Ref useApiKey, 'false']
+Mappings:
+  cloudFrontPriceClassMapping:
+    US-Canada-Europe:
+      value: "PriceClass_100"
+    US-Canada-Europe-Asia:
+      value: "PriceClass_200"
+    All-Edge-Locations:
+      value: "PriceClass_All"
+
 Resources:
-  route53newZone: 
+  route53newZone:
     Type: "AWS::Route53::HostedZone"
     Condition: createNewZone
-    Properties: 
-      HostedZoneConfig: 
+    Properties:
+      HostedZoneConfig:
         Comment: !Sub Zone for ${AWS::StackName}
       Name: !Ref route53ZoneName
-      HostedZoneTags: 
-        - 
+      HostedZoneTags:
+        -
           Key: "CreatedBy"
           Value: !Ref AWS::StackName
 
-  ddnsConfigTable: 
+  ddnsConfigTable:
     Type: "AWS::DynamoDB::Table"
-    Properties: 
+    Properties:
       TableName: !Sub ${AWS::StackName}-config
-      AttributeDefinitions: 
-        - 
+      AttributeDefinitions:
+        -
           AttributeName: "hostname"
           AttributeType: "S"
-        - 
+        -
           AttributeName: "record_type"
           AttributeType: "S"
-        - 
+        -
           AttributeName: "shared_secret"
           AttributeType: "S"
-      KeySchema: 
-        - 
+      KeySchema:
+        -
           AttributeName: "hostname"
           KeyType: "HASH"
-        - 
+        -
           AttributeName: "record_type"
           KeyType: "RANGE"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: !Ref ddbRcu
         WriteCapacityUnits: !Ref ddbWcu
       GlobalSecondaryIndexes:
         -
           IndexName: "shared_secret-index"
           KeySchema:
-            - 
+            -
               AttributeName: "shared_secret"
               KeyType: "HASH"
           Projection:
@@ -183,14 +184,14 @@ Resources:
   ddnsConfigBucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: !Join [ "-", [ !Ref "AWS::StackName", !Ref "AWS::Region", !Ref "AWS::AccountId"] ]
+      BucketName: !Join ["-", [!Ref "AWS::StackName", !Ref "AWS::Region", !Ref "AWS::AccountId"]]
       VersioningConfiguration:
         Status: Enabled
       LifecycleConfiguration:
         Rules:
-        - Id: Delete_Old_Versions
-          NoncurrentVersionExpirationInDays: 90
-          Status: Enabled
+          - Id: Delete_Old_Versions
+            NoncurrentVersionExpirationInDays: 90
+            Status: Enabled
 
   lambdaDdnsFunction:
     Type: "AWS::Lambda::Function"
@@ -198,7 +199,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${AWS::StackName}-ddns
       Handler: index.lambda_handler
-      Runtime: python3.7
+      Runtime: python3.9
       MemorySize: 512
       Timeout: 30
       Role: !GetAtt lambdaDdnsRole.Arn
@@ -214,16 +215,16 @@ Resources:
         S3Key: ddns_lambda.zip
         S3ObjectVersion: !GetAtt ddnsSourceToS3.ddns_lambda-S3ObjectVersion
 
-# Builds s3 zip objects for Lambda source.
+  # Builds s3 zip objects for Lambda source.
   setupLambda:
     Type: AWS::Lambda::Function
-    DependsOn: 
-        - ddnsConfigTable 
-        - lambdaDdnsRole
+    DependsOn:
+      - ddnsConfigTable
+      - lambdaDdnsRole
     Properties:
       FunctionName: !Sub ${AWS::StackName}-setup
       Handler: index.lambda_handler
-      Runtime: python3.7
+      Runtime: python3.9
       Timeout: 120
       Role: !GetAtt lambdaDdnsRole.Arn
       Environment:
@@ -240,10 +241,10 @@ Resources:
         S3Key: setup_lambda.zip
         S3ObjectVersion: !GetAtt setupSourceToS3.setup_lambda-S3ObjectVersion
 
-# Invokes setupLambda to populate sample data to DDB
+  # Invokes setupLambda to populate sample data to DDB
   runSetup:
     Type: Custom::setupLambda
-    DependsOn: 
+    DependsOn:
       - setupLambda
     Properties:
       ServiceToken: !GetAtt setupLambda.Arn
@@ -252,14 +253,14 @@ Resources:
       forceUpdate: !Ref templateVersion
       run_mode: 'first_run'
       cloudfront_url: ''
-      
-# Invokes setupLambda to create CNAME to CloudFront
-# after CloudFront distribution creation
-# only used for a CloudFront custom alias deployment    
+
+  # Invokes setupLambda to create CNAME to CloudFront
+  # after CloudFront distribution creation
+  # only used for a CloudFront custom alias deployment
   runSetupSecondRun:
     Type: Custom::setupLambda
     Condition: cloudfrontAlias
-    DependsOn: 
+    DependsOn:
       - setupLambda
       - ddnsCloudFrontAliased
     Properties:
@@ -269,16 +270,16 @@ Resources:
       forceUpdate: !Ref templateVersion
       run_mode: 'second_run'
       cloudfront_url: !GetAtt ddnsCloudFrontAliased.DomainName
-      
-# Builds zip objects in S3 for all Lambda function project code.
-# Invoked by
+
+  # Builds zip objects in S3 for all Lambda function project code.
+  # Invoked by
   sourceToS3Lambda:
     Type: AWS::Lambda::Function
     DependsOn: ddnsConfigBucket
     Properties:
       FunctionName: !Sub ${AWS::StackName}-source-to-s3
       Handler: index.lambda_handler
-      Runtime: python3.7
+      Runtime: python3.9
       Timeout: 120
       Role: !GetAtt lambdaDdnsRole.Arn
       Environment:
@@ -293,11 +294,11 @@ Resources:
           import uuid
           import urllib.parse
           import json
-           
+
           print('Loading function')
           from botocore.client import Config
           s3 = boto3.client('s3')
-          
+
           def send_response(request, response, status=None, reason=None):
               """ Send our response to the pre-signed URL supplied by CloudFormation"""
               if status is not None:
@@ -310,7 +311,7 @@ Resources:
                   https = http.client.HTTPSConnection(url.hostname)
                   https.request('PUT', url.path+'?'+url.query, body)
               return response
-          
+
           def lambda_handler(event, context):
               response = {
                   'StackId': event['StackId'],
@@ -323,7 +324,7 @@ Resources:
                   response['PhysicalResourceId'] = event['PhysicalResourceId']
               else:
                   response['PhysicalResourceId'] = str(uuid.uuid4())
-          
+
               # There is nothing to do for a delete request
               if event['RequestType'] == 'Delete':
                   return send_response(event, response)
@@ -341,15 +342,15 @@ Resources:
               except:
                 pass
               lambda_file = open('/tmp/index.py', 'w')
-              os.chmod('/tmp/index.py', 0o777)
+              os.chmod('/tmp/index.py', 0o0777)
               lambda_file.write(lambda_body)
               lambda_file.close()
               ## Build the zip archive
               zip_archive = zipfile.ZipFile(zip_file, 'w')
               zip_archive.write('/tmp/index.py', 'index.py')
               zip_archive.close()
-              zip_file = open(zip_file, 'r')
-          
+              zip_file = open(zip_file, 'rb')
+
               ## Put the archive in S3
               try:
                   s3_response = s3.put_object(
@@ -372,14 +373,11 @@ Resources:
               print(str(s3_response))
               print('Response Text: ' + str(response))
               return send_response(event, response)
-          
-          
-
 
   ## Invoke the sourceToS3Lambda function and send the body text of files to put in S3
-  ## Lambda-backed custom resources provisioned inline in CFN via the Zipfile method have a 4096 byte limit.  
+  ## Lambda-backed custom resources provisioned inline in CFN via the Zipfile method have a 4096 byte limit.
   ## We pass the DDNS Lambda function code to sourceToS3Lambda which zips the code into S3 to avoid exceeding that limit.
-  
+
   setupSourceToS3:
     Type: Custom::sourceToS3Lambda
     DependsOn: sourceToS3Lambda
@@ -395,19 +393,19 @@ Resources:
       lambda_body: |
             #force function to run by changing this: 0
             import boto3
-            import datetime  
+            import datetime
             import random
-            import os   
+            import os
             import uuid
             import http.client
             import urllib.parse
             import json
             import time
-            
+
             print('Loading function')
             from botocore.client import Config
             from botocore.exceptions import ClientError
-            
+
             # Import Lambda environment variables
             ddns_config_table = os.environ['ddns_config_table']
             route_53_zone_id = os.environ['route_53_zone_id']
@@ -430,7 +428,7 @@ Resources:
                     print('PUT', url.path+'?'+url.query, body)
                 print(response)
                 return response
-            
+
             def route53_set(aws_region, route_53_zone_id,
                                route_53_record_name, route_53_record_ttl,
                                route_53_record_type, route_53_record_value):
@@ -459,7 +457,7 @@ Resources:
                     }
                 )
                 return change_route53_record_set
-               
+
             def populate_ddb(ddns_config_table, route_53_zone_name):
                 try:
                     # Define the DDB client.
@@ -467,16 +465,16 @@ Resources:
                     dynamodb_table = dynamodb.Table(ddns_config_table)
                     dynamodb_table.put_item(
                       Item={
-                      'hostname': 'example-record.' + route_53_zone_name + '.', 
+                      'hostname': 'example-record.' + route_53_zone_name + '.',
                       'record_type': 'A',
                       'ttl': 60,
                       'shared_secret': ''.join(random.choice('0123456789ABCDEF') for i in range(16)),
-                      'lock_record': False, 
-                      'read_privilege': False, 
+                      'lock_record': False,
+                      'read_privilege': False,
                       'allow_internal': True,
-                      'ip_address': '1.1.1.1', 
+                      'ip_address': '1.1.1.1',
                       'mac_address': '0A:0A:0A:0A:0A:0A',
-                      'last_checked': str(datetime.datetime.now()), 
+                      'last_checked': str(datetime.datetime.now()),
                       'last_updated': str(datetime.datetime.now()),
                       'last_accessed': '1.2.3.4',
                       'comment': 'example record'
@@ -484,16 +482,16 @@ Resources:
                     )
                     dynamodb_table.put_item(
                       Item={
-                      'hostname': 'example-record.' + route_53_zone_name + '.', 
+                      'hostname': 'example-record.' + route_53_zone_name + '.',
                       'record_type': 'AAAA',
                       'ttl': 60,
-                      'shared_secret': ''.join(random.choice('0123456789ABCDEF') for i in range(16)), 
-                      'lock_record': False, 
-                      'read_privilege': False, 
+                      'shared_secret': ''.join(random.choice('0123456789ABCDEF') for i in range(16)),
+                      'lock_record': False,
+                      'read_privilege': False,
                       'allow_internal': True,
-                      'ip_address': '1:1:1:1:1:1:1:1', 
-                      'mac_address': '0A:0A:0A:0A:0A:0A', 
-                      'last_checked': str(datetime.datetime.now()), 
+                      'ip_address': '1:1:1:1:1:1:1:1',
+                      'mac_address': '0A:0A:0A:0A:0A:0A',
+                      'last_checked': str(datetime.datetime.now()),
                       'last_updated': str(datetime.datetime.now()),
                       'last_accessed': '2:2:2:2:2:2:2:2',
                       'comment': 'example record'
@@ -502,7 +500,7 @@ Resources:
                     print('Populated sample DDB entries')
                 except:
                     print('Failed to populate sample DDB entries')
-            
+
             def get_api_key(api_key_id):
                 apigateway = boto3.client('apigateway')
                 api_key_response = apigateway.get_api_key(apiKey=api_key_id, includeValue=True)
@@ -512,7 +510,7 @@ Resources:
                   return api_key_response['value']
                 except:
                   print('fail')
-                              
+
             ## Main Lambda handler
             def lambda_handler(event, context):
                 response = {
@@ -530,13 +528,13 @@ Resources:
                     response['PhysicalResourceId'] = event['PhysicalResourceId']
                 else:
                     response['PhysicalResourceId'] = str(uuid.uuid4())
-            
+
                 # There is nothing to do for a delete request
                 if event['RequestType'] == 'Delete':
                     return send_response(event, response)
-                    
-                ## Main function logic    
-                try:  
+
+                ## Main function logic
+                try:
                   print('Run mode: '+run_mode)
                   if run_mode == 'first_run':
                     populate_ddb(ddns_config_table, route_53_zone_name)
@@ -554,8 +552,6 @@ Resources:
                   ## will cause a stack rollback on failure and can leave the stack in a state that requires deletion.
                   #response['Status'] = 'FAILED'
                 return send_response(event, response)
-            
-            
 
   ddnsSourceToS3:
     Type: Custom::sourceToS3Lambda
@@ -589,7 +585,7 @@ Resources:
         default_ttl = int(os.environ['default_ttl'])
         aws_region = os.environ['AWS_REGION']
 
-        ''' This function pulls the config entry from DynamoDB 
+        ''' This function pulls the config entry from DynamoDB
             It is called by the run_set_mode function.'''
         def ddb_config(route_53_record_name, route_53_record_type, set_ip, source_ip, read_write):
             # Define the DDB client.
@@ -626,7 +622,7 @@ Resources:
                     Key={
                     'hostname': route_53_record_name,
                     'record_type': route_53_record_type },
-                    UpdateExpression='SET last_updated = :now_time , ip_address = :ip , last_accessed = :last_accessed', 
+                    UpdateExpression='SET last_updated = :now_time , ip_address = :ip , last_accessed = :last_accessed',
                     ExpressionAttributeValues={
                         ':now_time': str(datetime.datetime.now()),
                         ':ip': set_ip,
@@ -707,11 +703,11 @@ Resources:
                     }
                 )
                 return 1
-                
+
         def validate_hash(set_hostname, source_ip, validation_hash, shared_secret):
             # Calculate the validation hash.
-            calculated_hash = hashlib.sha256((
-              source_ip + set_hostname + shared_secret).encode('utf-8')).hexdigest()
+            calculated_hash = hashlib.sha256(
+                source_ip.encode("utf-8") + set_hostname.encode("utf-8") + shared_secret.encode("utf-8")).hexdigest()
             # Compare the validation_hash from the client to the
             # calculated_hash.
             # If they don't match, error out.
@@ -725,7 +721,7 @@ Resources:
                 return_message = 'Validation hashes match.'
                 return {'return_status': return_status,
                         'return_message': return_message}
-                                        
+
         def run_list_hosts(set_hostname, record_type, validation_hash, source_ip):
             try:
                 record_config_set = ddb_config(set_hostname, record_type, '', source_ip, 'read')
@@ -741,14 +737,14 @@ Resources:
                     return_status = 'fail'
                     return_message = 'record lacks read permissions'
                     return {'return_status': return_status,
-                            'return_message': return_message}            
+                            'return_message': return_message}
             validation_status = validate_hash(set_hostname, source_ip, validation_hash, shared_secret)
             if validation_status['return_status'] == 'fail':
                     return_status = validation_status['return_status']
                     return_message = validation_status['return_message']
                     return {'return_status': return_status,
                             'return_message': return_message}
-                            
+
             dynamodb = boto3.resource('dynamodb')
             dynamodb_table = dynamodb.Table(ddns_config_table)
             dynamodb_response = dynamodb_table.query(
@@ -763,9 +759,9 @@ Resources:
                 del record['shared_secret']
                 del record['read_privilege']
             return {'return_status': return_status,
-                    'return_message': return_message}                            
-                        
-        ''' This function calls route53_set to see if the current Route 53 
+                    'return_message': return_message}
+
+        ''' This function calls route53_set to see if the current Route 53
             DNS record matches the client's current IP.
             If not it calls route53_set to set the DNS record to the current IP.
             It is called by the main lambda_handler function.
@@ -780,15 +776,15 @@ Resources:
                     'or reading the DyanmoDB config item for '+set_hostname+': '+record_type
                 return {'return_status': return_status,
                         'return_message': return_message}
-            # Check to see if the record is locked 
+            # Check to see if the record is locked
             lock_record = record_config_set['Item']['lock_record']
             if lock_record:
                 return_status = 'fail'
                 return_message = 'The record for ' + set_hostname + ' is locked, update denied.'
                 return {'return_status': return_status,
                         'return_message': return_message}
-              
-            ## Deny update to internal IP if disallowed by DDB record.          
+
+            ## Deny update to internal IP if disallowed by DDB record.
             allow_internal = record_config_set['Item']['allow_internal']
             if ( not allow_internal and not source_ip == set_ip):
                 return_status = 'fail'
@@ -797,27 +793,27 @@ Resources:
                         'return_message': return_message}
 
             route_53_zone_id = route_53_zone_id_imported
-            
+
             ## Left for possible future multi-zone capability
             #aws_region = record_config_set['Item']['aws_region']
             ## the Route 53 Zone you created for the script
             #try:
             #  route_53_zone_id = record_config_set['Item']['zone_id']
-            #except: 
+            #except:
             #  route_53_zone_id = route_53_zone_id_imported
 
             # record TTL (Time To Live) in seconds tells DNS servers how long to cache
             # the record.
             try:
               route_53_record_ttl = int(record_config_set['Item']['ttl'])
-            except: 
+            except:
               route_53_record_ttl = default_ttl
-              
+
             route_53_record_type = record_config_set['Item']['record_type']
             shared_secret = record_config_set['Item']['shared_secret']
 
             # debug former validation hash check location
-            
+
             validation_status = validate_hash(set_hostname, source_ip, validation_hash, shared_secret)
             if validation_status['return_status'] == 'fail':
                     return_status = validation_status['return_status']
@@ -876,7 +872,7 @@ Resources:
                             'return_message': return_message}
 
         ''' The function that Lambda executes.
-            It contains the main script logic, calls 
+            It contains the main script logic, calls
             and returns the output back to API Gateway'''
         def lambda_handler(event, context):
             # Set event data from the API Gateway to variables.
@@ -897,7 +893,7 @@ Resources:
                 return_message = 'You must pass mode=get, mode=set or mode=list_hosts arguments.'
                 return_dict = {'return_status': return_status,
                                'return_message': return_message}
-                               
+
             if not execution_mode == 'get':
                 # Validate that the client passed a sha256 hash
                 # regex checks for a 64 character hex string.
@@ -917,7 +913,7 @@ Resources:
                   record_type = 'AAAA'
                 else:
                   record_type = 'A'
-                        
+
             if execution_mode == 'list_hosts':
                 return_dict = run_list_hosts(set_hostname, record_type, validation_hash, source_ip)
 
@@ -931,7 +927,7 @@ Resources:
                 return_message = source_ip
                 return_dict = {'return_status': return_status,
                                'return_message': return_message}
-                               
+
             # This Lambda function always exits as a success
             # and passes success or failure information in the json message.
             return return_dict
@@ -950,15 +946,15 @@ Resources:
             CustomOriginConfig:
               HTTPSPort: '443'
               OriginProtocolPolicy: https-only
-              OriginSSLProtocols: 
+              OriginSSLProtocols:
                 - TLSv1.2
                 - TLSv1.1
         Enabled: True
-        Aliases: 
+        Aliases:
           - !Sub '${apiCname}.${route53ZoneName}'
-        ViewerCertificate: 
+        ViewerCertificate:
           AcmCertificateArn: !Ref acmCertificateARN
-          SslSupportMethod: 'sni-only' 
+          SslSupportMethod: 'sni-only'
         DefaultCacheBehavior:
           TargetOriginId: !If [enableApiKey, !Ref ddnsApiKeyed, !Ref ddnsApi]
           ForwardedValues:
@@ -972,8 +968,8 @@ Resources:
         HttpVersion: http2
         IPV6Enabled: True
         CustomErrorResponses:
-        - ErrorCode: 403
-          ErrorCachingMinTTL: 0
+          - ErrorCode: 403
+            ErrorCachingMinTTL: 0
       Tags:
         - Key: created-by
           Value: !Ref AWS::StackName
@@ -991,7 +987,7 @@ Resources:
             CustomOriginConfig:
               HTTPSPort: '443'
               OriginProtocolPolicy: https-only
-              OriginSSLProtocols: 
+              OriginSSLProtocols:
                 - TLSv1.2
                 - TLSv1.1
         Enabled: True
@@ -1008,8 +1004,8 @@ Resources:
         HttpVersion: http2
         IPV6Enabled: True
         CustomErrorResponses:
-        - ErrorCode: 403
-          ErrorCachingMinTTL: 0
+          - ErrorCode: 403
+            ErrorCachingMinTTL: 0
       Tags:
         - Key: created-by
           Value: !Ref AWS::StackName
@@ -1020,8 +1016,8 @@ Resources:
     Properties:
       Name: !Sub ${AWS::StackName}-api
       ApiKeySourceType: HEADER
-      EndpointConfiguration: 
-        Types: 
+      EndpointConfiguration:
+        Types:
           - REGIONAL
       Body:
         swagger: 2.0
@@ -1030,26 +1026,26 @@ Resources:
             Ref: AWS::StackName
         basePath: "/prod"
         schemes:
-        - "https"
+          - "https"
         paths:
           "/":
             get:
               consumes:
-              - "application/json"
+                - "application/json"
               produces:
-              - "application/json"
+                - "application/json"
               responses:
                 "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
               security:
-              - api_key: []
+                - api_key: []
               x-amazon-apigateway-integration:
                 responses:
                   default:
                     statusCode: "200"
-                uri: 
+                uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaDdnsFunction.Arn}/invocations
                 passthroughBehavior: "when_no_match"
                 httpMethod: "POST"
@@ -1065,15 +1061,15 @@ Resources:
           Empty:
             type: "object"
             title: "Empty Schema"
-            
+
   ddnsApiKeyed:
     Type: "AWS::ApiGateway::RestApi"
     Condition: enableApiKey
     Properties:
       Name: !Sub ${AWS::StackName}-api
       ApiKeySourceType: HEADER
-      EndpointConfiguration: 
-        Types: 
+      EndpointConfiguration:
+        Types:
           - REGIONAL
       Body:
         swagger: 2.0
@@ -1082,26 +1078,26 @@ Resources:
             Ref: AWS::StackName
         basePath: "/prod"
         schemes:
-        - "https"
+          - "https"
         paths:
           "/":
             get:
               consumes:
-              - "application/json"
+                - "application/json"
               produces:
-              - "application/json"
+                - "application/json"
               responses:
                 "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
               security:
-              - api_key: []
+                - api_key: []
               x-amazon-apigateway-integration:
                 responses:
                   default:
                     statusCode: "200"
-                uri: 
+                uri:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaDdnsFunction.Arn}/invocations
                 passthroughBehavior: "when_no_match"
                 httpMethod: "POST"
@@ -1123,7 +1119,7 @@ Resources:
             name: "x-api-key"
             in: "header"
 
-      
+
   ddnsApiDeployment:
     Type: AWS::ApiGateway::Deployment
     Properties:
@@ -1133,35 +1129,35 @@ Resources:
   apiGatewayUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
     Condition: enableApiKey
-    DependsOn: 
+    DependsOn:
       - "ddnsApiDeployment"
     Properties:
       ApiStages:
-      - ApiId: !Ref ddnsApiKeyed
-        Stage: 'prod'
+        - ApiId: !Ref ddnsApiKeyed
+          Stage: 'prod'
       Description: Unlimited usage plan for API key
       UsagePlanName: !Sub ${AWS::StackName}-usage-plan
- 
-  apiKey: 
+
+  apiKey:
     Type: "AWS::ApiGateway::ApiKey"
     Condition: enableApiKey
-    DependsOn: 
+    DependsOn:
       - "ddnsApiDeployment"
-    Properties: 
+    Properties:
       Name: !Sub ${AWS::StackName}-key
       Enabled: "true"
-      StageKeys: 
+      StageKeys:
         - RestApiId: !Ref 'ddnsApiKeyed'
           StageName: 'prod'
-          
+
   usagePlanKey:
     Type: "AWS::ApiGateway::UsagePlanKey"
     Condition: enableApiKey
-    Properties : 
+    Properties:
       KeyId: !Ref 'apiKey'
       KeyType: API_KEY
       UsagePlanId: !Ref 'apiGatewayUsagePlan'
-      
+
   lambdaDdnsRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1170,12 +1166,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Policies:
         - PolicyName: !Sub ${AWS::StackName}-lambda-ddns
           PolicyDocument:
@@ -1202,18 +1198,18 @@ Resources:
                   - s3:Get*
                   - s3:List*
                   - s3:PutObject
-              - Resource: 
+              - Resource:
                   - !GetAtt ddnsConfigTable.Arn
                   - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ddnsConfigTable}/index/*'
                 Effect: Allow
                 Action:
                   - dynamodb:GetItem
-                  - dynamodb:BatchGetItem  
-                  - dynamodb:PutItem 
-                  - dynamodb:UpdateItem  
-                  - dynamodb:Scan   
+                  - dynamodb:BatchGetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Scan
                   - dynamodb:Query
-              - Resource: 
+              - Resource:
                   - !Sub 'arn:aws:apigateway:${AWS::Region}::/apikeys/*'
                 Effect: Allow
                 Action:
@@ -1227,12 +1223,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - apigateway.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Policies:
         - PolicyName: !Sub ${AWS::StackName}-apigateway
           PolicyDocument:
@@ -1242,7 +1238,7 @@ Resources:
                 Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                  
+
   lambdaInvocationPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1254,10 +1250,10 @@ Resources:
 Outputs:
   apiUrl:
     Value:
-      !If [enableCloudFront, !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', !GetAtt ddnsCloudFront.DomainName],  !If [enableApiKey, !Sub '${ddnsApiKeyed}.execute-api.${AWS::Region}.amazonaws.com/prod', !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com/prod']]
+      !If [enableCloudFront, !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', !GetAtt ddnsCloudFront.DomainName], !If [enableApiKey, !Sub '${ddnsApiKeyed}.execute-api.${AWS::Region}.amazonaws.com/prod', !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com/prod']]
     Description:
       The API URL to use in your client.
-      
+
   apiOriginURL:
     Value:
       !If [enableApiKey, !Sub '${ddnsApiKeyed}.execute-api.${AWS::Region}.amazonaws.com/prod', !Sub '${ddnsApi}.execute-api.${AWS::Region}.amazonaws.com/prod']
@@ -1266,21 +1262,21 @@ Outputs:
       API Gateway url, use for cname if manually implementing an API custom alias.
   cloudFrontURL:
     Value:
-      !If [enableCloudFront, !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', !GetAtt ddnsCloudFront.DomainName],  '']
+      !If [enableCloudFront, !If [cloudfrontAlias, !Sub '${apiCname}.${route53ZoneName}', !GetAtt ddnsCloudFront.DomainName], '']
     Description:
       CloudFront url, use for cname if manually implementing an API custom alias.
   route53ZoneName:
     Value:
       !Ref route53ZoneName
-  route53ZoneID: 
+  route53ZoneID:
     Value:
       !If [useExistingZone, !Ref route53ZoneId, !Ref route53newZone]
-  DNSZoneNameServers: 
+  DNSZoneNameServers:
     Value:
-      !If [createNewZone, !Join [ " ", !GetAtt route53newZone.NameServers ] , '' ]
+      !If [createNewZone, !Join [" ", !GetAtt route53newZone.NameServers], '']
     Description:
       Name Servers for DNS Zone if created by stack.  Use for delegation of subdomain.
-  apiKey: 
+  apiKey:
     Condition: enableApiKey
     Value:
       !GetAtt runSetup.api_key
@@ -1288,5 +1284,5 @@ Outputs:
       Key required for API access.  Pass as http header x-api-key
 
   templateVersion:
-     Value: 
+    Value:
       !Ref templateVersion
