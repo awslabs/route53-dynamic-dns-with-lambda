@@ -198,12 +198,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${AWS::StackName}-ddns
       Handler: index.lambda_handler
-      Runtime: 
-      
-      
-      
-      
-      3.9
+      Runtime: python3.9
       MemorySize: 512
       Timeout: 30
       Role: !GetAtt lambdaDdnsRole.Arn
