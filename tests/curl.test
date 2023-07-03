@@ -1,0 +1,39 @@
+{
+  "headers": {
+    "content-length": "25",
+    "x-amzn-tls-cipher-suite": "ECDHE-RSA-AES128-GCM-SHA256",
+    "x-amzn-tls-version": "TLSv1.2",
+    "x-amzn-trace-id": "Root=1-6384d431-5271d0465dea224f2651e069",
+    "x-forwarded-proto": "https",
+    "host": "acs5cl2b2xjj7mijteo3krrxk40cfgmp.lambda-url.eu-west-1.on.aws",
+    "x-forwarded-port": "443",
+    "content-type": "application/json",
+    "x-forwarded-for": "2a00:23c4:8002:6901:99b0:6689:389f:63ed",
+    "accept": "*/*",
+    "user-agent": "curl/7.79.1"
+  },
+  "isBase64Encoded": false,
+  "rawPath": "/",
+  "routeKey": "$default",
+  "requestContext": {
+    "accountId": "anonymous",
+    "timeEpoch": 1669649457119,
+    "routeKey": "$default",
+    "stage": "$default",
+    "domainPrefix": "acs5cl2b2xjj7mijteo3krrxk40cfgmp",
+    "requestId": "77b938c5-a2b3-461a-86a0-6a283672b6e3",
+    "domainName": "acs5cl2b2xjj7mijteo3krrxk40cfgmp.lambda-url.eu-west-1.on.aws",
+    "http": {
+      "path": "/",
+      "protocol": "HTTP/1.1",
+      "method": "POST",
+      "sourceIp": "2a00:23c4:8002:6901:99b0:6689:389f:63ed",
+      "userAgent": "curl/7.79.1"
+    },
+    "time": "28/Nov/2022:15:30:57 +0000",
+    "apiId": "acs5cl2b2xjj7mijteo3krrxk40cfgmp"
+  },
+  "body": "{\"execution_mode\":\"set\", \"validation_hash\":\"5f2b2f36b14b3abfab0e6c885c9d367df12564045ef1ee850242951b1e08ebd0\", \"ddns_hostname\":\"test.aws.com\"}",
+  "version": "2.0",
+  "rawQueryString": ""
+}

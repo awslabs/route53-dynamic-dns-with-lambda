@@ -1,0 +1,5 @@
+{
+	"route_53_zone_id": "MY_ZONE_ID",
+	"route_53_record_ttl": 60,
+	"shared_secret": "SHARED_SECRET_1"
+}
