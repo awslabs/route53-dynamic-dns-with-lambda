@@ -52,7 +52,7 @@ The script will verify CDK stack deployment is deployed, if not it will return:<
 Dyndns stack not found, ensure the right AWS CLI profile is being used. 
 ```
 
-If the stack is present but deployement is not completed it will return:<br>
+If the stack is present but deployment is not completed it will return:<br>
 ```
 Stack not yet deployed try again in few minutes
 ```
