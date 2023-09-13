@@ -69,7 +69,7 @@ class DyndnsStack(cdk.Stack):
                 code=lambda_.Code.from_asset("lambda"),
                 role=fn_role,
                 function_name=runtime_function_name.value_as_string,
-                #Provide DynammoDB table name as enviroment variable
+                #Provide DynamoDB table name as environment variable
                 environment={
                  "ddns_config_table":table.table_name
                 }
@@ -81,13 +81,13 @@ class DyndnsStack(cdk.Stack):
                 handler="index.lambda_handler",
                 code=lambda_.Code.from_asset("lambda"),
                 role=fn_role,
-                #Provide DynammoDB table name as enviroment variable
+                #Provide DynamoDB table name as environment variable
                 environment={
                  "ddns_config_table":table.table_name
                 }
             )            
 
-        #Create FunctionURL for invokation - principal will be set to * as it required for invokation from any HTTP client
+        #Create FunctionURL for invocation - principal will be set to * as it required for invocation from any HTTP client
         fn.add_function_url(
             #Allow unauthenticated access
             auth_type=lambda_.FunctionUrlAuthType.NONE,
@@ -97,7 +97,7 @@ class DyndnsStack(cdk.Stack):
             )
         )
 
-        #Give lamdba permissions to read DynamoDB table
+        #Give lambda permissions to read DynamoDB table
         table.grant_read_data(fn)
 
         #Suppress AwsSolutions-IAM5 triggered by Resources::*
@@ -107,9 +107,9 @@ class DyndnsStack(cdk.Stack):
                 NagPackSuppression(
                     id = 'AwsSolutions-IAM5',
                     reason="""
-                    Lamdba role created at line 29 has 2 inline policies allowing access to Route53 and CloudWatch. 
+                    Lambda role created at line 29 has 2 inline policies allowing access to Route53 and CloudWatch. 
                     Route53 resources are set to "*" as the function will need to access any hosted zone.
-                    CloudWatch resources are set to "*" to avoid having to specigy a Logging group and consume the default one deployed by CDK.
+                    CloudWatch resources are set to "*" to avoid having to specify a Logging group and consume the default one deployed by CDK.
                     """
                 )
             ]
