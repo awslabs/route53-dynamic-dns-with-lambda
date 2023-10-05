@@ -109,7 +109,7 @@ print('#                                            #')
 print('##############################################')
 confirm=input()
 if confirm == 'y':
-    # Write configuration in dynamoddb
+    # Write configuration in dynamodb
     print('\nSaving configuration...')
     try:
         dynamodb.put_item(
