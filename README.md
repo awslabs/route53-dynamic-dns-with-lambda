@@ -23,7 +23,12 @@ https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.htm
 
 In the Cloud9 environment clone this repository:
 
-> `git clone <repository_url>`
+In the Cloud9 enviroment clone this repository:
+>` git clone <repository_url> `
+
+Install Python requirements:
+
+> `pip install -r requirements.txt`
 
 If CDK was never used in the deployment account bootstrap it for CDK:
 https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html
