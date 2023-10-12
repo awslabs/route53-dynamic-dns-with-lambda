@@ -9,15 +9,6 @@ class DyndnsStack(cdk.Stack):
 
     def __init__(self, scope: cdk.App, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-        #Define function name if required
-        runtime_function_name  = cdk.CfnParameter(
-            self,
-            "ddFunction", #this is what the user can pass as --parameters ddFunction="your_name"
-            type="String",
-            description="Provide the function name for the runtime",
-            default=""
-        )
      
         
         #Create dynamoDB table
@@ -61,31 +52,17 @@ class DyndnsStack(cdk.Stack):
         ) 
 
 
-        if runtime_function_name.value_as_string !="":
-            fn = lambda_.Function(self, "dyndns_fn",
-                runtime=lambda_.Runtime.PYTHON_3_9,
-                architecture=lambda_.Architecture.ARM_64,
-                handler="index.lambda_handler",
-                code=lambda_.Code.from_asset("lambda"),
-                role=fn_role,
-                function_name=runtime_function_name.value_as_string,
-                #Provide DynamoDB table name as environment variable
-                environment={
-                 "ddns_config_table":table.table_name
-                }
-            )
-        else:
-            fn = lambda_.Function(self, "dyndns_fn",
-                runtime=lambda_.Runtime.PYTHON_3_9,
-                architecture=lambda_.Architecture.ARM_64,
-                handler="index.lambda_handler",
-                code=lambda_.Code.from_asset("lambda"),
-                role=fn_role,
-                #Provide DynamoDB table name as environment variable
-                environment={
-                 "ddns_config_table":table.table_name
-                }
-            )            
+        fn = lambda_.Function(self, "dyndns_fn",
+            runtime=lambda_.Runtime.PYTHON_3_11,
+            architecture=lambda_.Architecture.ARM_64,
+            handler="index.lambda_handler",
+            code=lambda_.Code.from_asset("lambda"),
+            role=fn_role,
+            #Provide DynammoDB table name as enviroment variable
+            environment={
+                "ddns_config_table":table.table_name
+            }
+        )            
 
         #Create FunctionURL for invocation - principal will be set to * as it required for invocation from any HTTP client
         fn.add_function_url(
