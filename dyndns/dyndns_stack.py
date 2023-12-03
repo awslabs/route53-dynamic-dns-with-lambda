@@ -14,7 +14,8 @@ class DyndnsStack(cdk.Stack):
         #Create dynamoDB table
         table = dynamodb.Table(self, "dyndns_db",
             partition_key=dynamodb.Attribute(name="hostname", type=dynamodb.AttributeType.STRING),
-            removal_policy=cdk.RemovalPolicy.DESTROY
+            removal_policy=cdk.RemovalPolicy.DESTROY,
+            point_in_time_recovery=True                   
         )
         
         #Create Lambda role
@@ -53,7 +54,7 @@ class DyndnsStack(cdk.Stack):
 
 
         fn = lambda_.Function(self, "dyndns_fn",
-            runtime=lambda_.Runtime.PYTHON_3_11,
+            runtime=lambda_.Runtime.PYTHON_3_12,
             architecture=lambda_.Architecture.ARM_64,
             handler="index.lambda_handler",
             code=lambda_.Code.from_asset("lambda"),
