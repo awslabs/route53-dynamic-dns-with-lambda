@@ -30,6 +30,13 @@ Install Python requirements:
 
 > `pip install -r requirements.txt`
 
+If you intend to test DNS record update on the Cloud9 instance you must install `perl-Digest-SHA` to add the `shasum` package.
+ ```
+ sudo yum update
+ sudo yum install perl-Digest-SHA
+ ```
+
+
 If CDK was never used in the deployment account bootstrap it for CDK:
 https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html
 
