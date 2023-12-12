@@ -30,7 +30,7 @@ Install Python requirements:
 
 > `pip install -r requirements.txt`
 
-If you intend to test DNS record update on the Cloud9 instance you must install `perl-Digest-SHA` to add the `shasum` package.
+To test DNS record update on the Cloud9 instance you must install `perl-Digest-SHA` to add the `shasum` package.
  ```
  sudo yum update
  sudo yum install perl-Digest-SHA
