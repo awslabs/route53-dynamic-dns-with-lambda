@@ -1,3 +1,4 @@
 aws-cdk-lib
 cdk-nag
 constructs
+boto3
