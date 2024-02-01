@@ -1,13 +1,6 @@
 # Dynamic DNS via AWS API Gateway, Lambda & Route 53
 # Script variables use lower_case_
 
-# This version implements setting internal IP
-# Note that this weakens the security of the system since the client specifies
-# the IP to set, where before the IP was set to the source IP of the client request.
-# To disable internal IP find the block of text:
-# '# Comment out the following 4 lines to disable internal IP'
-# and do that ;)
-
 from __future__ import print_function
 
 import json
@@ -182,7 +175,7 @@ def run_set_mode(ddns_hostname, validation_hash, source_ip):
 
 
 '''
-The function that Lambda executes. It contains the main script logic, calls and returns the output back to API Gateway
+The function that Lambda executes. It contains the main script logic.
 '''
 
 
