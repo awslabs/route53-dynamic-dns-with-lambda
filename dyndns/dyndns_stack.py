@@ -59,6 +59,7 @@ class DyndnsStack(cdk.Stack):
             handler="index.lambda_handler",
             code=lambda_.Code.from_asset("lambda"),
             role=fn_role,
+            timeout=cdk.Duration.seconds(8),
             #Provide DynammoDB table name as enviroment variable
             environment={
                 "ddns_config_table":table.table_name
