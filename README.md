@@ -18,29 +18,31 @@ The Lambda IAM Role will have the following permissions in addition to the stand
 - READ (all actions) for the deployed DynamoDB Table
 - Route53 List and Change record set
 
-To deploy the CDK stack to an AWS account is suggested to create an **EC2 Cloud9 environment** in a chosen region.
-https://docs.aws.amazon.com/cloud9/latest/user-guide/create-environment-main.html
+To deploy the CDK stack to an AWS account is suggested to use a CloudShell session: 
+https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html
 
-In the Cloud9 environment clone this repository:
-
-In the Cloud9 enviroment clone this repository:
->` git clone <repository_url> `
+Clone this repository:
+>` git clone https://github.com/awslabs/route53-dynamic-dns-with-lambda.git`
 
 Install Python requirements:
 
 > `pip install -r requirements.txt`
 
-To test DNS record update on the Cloud9 instance `perl-Digest-SHA` must be installed to add the `shasum` package.
+To test DNS record update on the CloudShell session `perl-Digest-SHA` must be installed to add the `shasum` package.
  ```
  sudo yum update
  sudo yum install perl-Digest-SHA
  ```
 
-
 If CDK was never used in the deployment account bootstrap it for CDK:
 https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html
 
 > `cdk bootstrap`
+
+If you get an error about CDK CLI not being up to date run the following:
+> `sudo npm install -g aws-cdk`
+
+> Then retry `ckd bootstrap`
 
 Deploy the stack
 
