@@ -48,9 +48,13 @@ def route53_client(execution_mode, route_53_zone_id,
                 HostedZoneId=route_53_zone_id,
                 StartRecordName=route_53_record_name,
                 StartRecordType=route_53_record_type,
+                MaxItems='1'
             )
             try:
-                currentroute53_ip = current_route53_record_set['ResourceRecordSets'][0]['ResourceRecords'][0]['Value']
+                if current_route53_record_set['ResourceRecordSets'][0]['Name'].rstrip('.') == route_53_record_name.rstrip('.'):
+                    currentroute53_ip = current_route53_record_set['ResourceRecordSets'][0]['ResourceRecords'][0]['Value']
+                else:
+                    currentroute53_ip = '0'
             except:
                 currentroute53_ip = '0'
             return {'return_status': 'success', 'return_message': currentroute53_ip}
