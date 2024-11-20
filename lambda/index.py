@@ -51,8 +51,7 @@ def route53_client(execution_mode, route_53_zone_id,
                 MaxItems='1'
             )
             try:
-                if current_route53_record_set['ResourceRecordSets'] and \
-                   current_route53_record_set['ResourceRecordSets'][0]['Name'].rstrip('.') == route_53_record_name.rstrip('.'):
+                if current_route53_record_set['ResourceRecordSets'][0]['Name'].rstrip('.') == route_53_record_name.rstrip('.'):
                     currentroute53_ip = current_route53_record_set['ResourceRecordSets'][0]['ResourceRecords'][0]['Value']
                 else:
                     currentroute53_ip = '0'
