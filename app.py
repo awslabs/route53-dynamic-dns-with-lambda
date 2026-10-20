@@ -2,7 +2,7 @@
 import os
 
 import aws_cdk as cdk
-from aws_cdk import Aspects
+from aws_cdk import Validations
 from cdk_nag import AwsSolutionsChecks
 
 
@@ -11,5 +11,5 @@ from dyndns.dyndns_stack import DyndnsStack
 
 app = cdk.App()
 DyndnsStack(app, "DyndnsStack")
-Aspects.of(app).add(AwsSolutionsChecks(verbose=True))
+Validations.of(app).add_plugins(AwsSolutionsChecks(verbose=True))
 app.synth()
