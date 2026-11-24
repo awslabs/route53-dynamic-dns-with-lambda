@@ -3,7 +3,7 @@ import aws_cdk.aws_s3 as s3
 import aws_cdk.aws_lambda as lambda_
 import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_iam as iam
-from cdk_nag import AwsSolutionsChecks, NagSuppressions, NagPackSuppression
+from aws_cdk import Validations, Acknowledgment
 
 class DyndnsStack(cdk.Stack):
 
@@ -80,16 +80,13 @@ class DyndnsStack(cdk.Stack):
         table.grant_read_data(fn)
 
         #Suppress AwsSolutions-IAM5 triggered by Resources::*
-        NagSuppressions.add_resource_suppressions(
-            construct= fn_role,
-            suppressions=[
-                NagPackSuppression(
-                    id = 'AwsSolutions-IAM5',
-                    reason="""
-                    Lambda role created at line 29 has 2 inline policies allowing access to Route53 and CloudWatch. 
+        Validations.of(fn_role).acknowledge(
+            Acknowledgment(
+                id='AwsSolutions-IAM5[Resource::*]',
+                reason="""
+                    Lambda role created above has 2 inline policies allowing access to Route53 and CloudWatch.
                     Route53 resources are set to "*" as the function will need to access any hosted zone.
                     CloudWatch resources are set to "*" to avoid having to specify a Logging group and consume the default one deployed by CDK.
-                    """
-                )
-            ]
+                """
+            )
         )

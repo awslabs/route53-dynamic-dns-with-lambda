@@ -42,7 +42,7 @@ https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html
 If you get an error about CDK CLI not being up to date run the following:
 > `sudo npm install -g aws-cdk`
 
-> Then retry `ckd bootstrap`
+> Then retry `cdk bootstrap`
 
 Deploy the stack
 
